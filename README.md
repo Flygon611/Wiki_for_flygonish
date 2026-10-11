@@ -27,7 +27,8 @@ Fandom / Wikia 2010 年代风格的静态站点 + 一套本地可视化编辑器
 │   └── ui/                      ← 编辑器前端
 ├── tools/
 │   ├── import_obsidian.py       ← 从 Obsidian 库一次性导入
-│   └── check_site.py            ← 站点链接自检
+│   ├── check_site.py            ← 站点链接自检
+│   └── check_editor.py          ← 编辑器路径安全检查
 ├── wikicore/                    ← 渲染器与主题（build.py 的内部模块）
 ├── build.py                     ← 生成器：content/ → docs/
 └── wiki.config.json             ← 站点名、标语、配色、页脚、仓库地址
@@ -73,7 +74,6 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 ```
 
 只需要 **Python 3.8+**，没有任何第三方依赖，不用 `pip install`、不用 `npm install`。
-
 ---
 
 ## 换成自己的内容
@@ -219,6 +219,7 @@ python3 tools/import_obsidian.py --write   # 真的导入（已存在的页面�
 - **`最近更新`按源文件修改时间排序**，构建时记录下来。另一台机器 clone 下来时间戳会变，
   重新构建一次即可。
 - **编辑器没有登录验证**，只监听 `127.0.0.1`，不要改成 `0.0.0.0` 暴露到局域网/公网。
+  所有来自浏览器的路径参数都做了白名单式校验（`python3 tools/check_editor.py` 覆盖了这组检查）。
 - **不要直接双击 `docs/index.html` 看**：浏览器在 `file://` 下不允许网页读取 `search.json`，
   搜索会失效（页面会给出提示）。本地看请用 `python3 build.py --open`，或发布后用线上地址。
 - **删除页面**是移到 `content/.trash/`（该目录已被 git 忽略），不会真删；要恢复就手动移回来。
@@ -232,8 +233,9 @@ python3 editor/serve.py                 # 启动编辑器（8765 端口）
 python3 editor/serve.py --port 9000     # 换端口
 python3 build.py                        # 构建站点
 python3 build.py --open                 # 构建并预览
-python3 tools/check_site.py             # 链接自检
+python3 tools/check_site.py             # 站点自检：静态链接 + 搜索候选链接
 python3 tools/check_site.py --list      # 顺带列出所有页面
+python3 tools/check_editor.py           # 编辑器路径安全检查
 ```
 
 ---

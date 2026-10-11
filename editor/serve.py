@@ -78,15 +78,45 @@ def text_response(handler, text, status=200, ctype="text/plain; charset=utf-8"):
 
 def content_path(rel):
     """把 content/ 下的相对路径转成绝对路径，并挡住目录穿越。"""
-    rel = (rel or "").replace("\\", "/").strip("/")
+    rel = (rel or "").replace("\\", "/").strip()
     if not rel:
         raise ValueError("缺少路径")
-    full = os.path.normpath(os.path.join(CONTENT, rel))
-    if not full.startswith(CONTENT + os.sep):
+    # 绝对路径与盘符直接拒绝，不靠 normpath 把 /etc/x.md 悄悄变成 content/etc/x.md
+    if rel.startswith("/") or re.match(r"^[A-Za-z]:", rel):
+        raise ValueError("只接受 content/ 下的相对路径：%s" % rel)
+    parts = [p for p in rel.split("/") if p]
+    if any(p in (".", "..") for p in parts):
+        raise ValueError("路径不合法：%s" % rel)
+    full = os.path.normpath(os.path.join(CONTENT, *parts))
+    if not _within(full, CONTENT):
         raise ValueError("路径越界：%s" % rel)
     if not full.endswith(".md"):
         raise ValueError("只允许编辑 .md 文件")
     return full
+
+
+def work_segment(work, label="作品目录名"):
+    """校验「作品目录」参数：只允许单层普通目录名，不能有分隔符或 .. 段。
+
+    这个参数来自浏览器，之前没校验，upload 接口能借它把文件写到 assets/ 之外。
+    """
+    w = (work or "").strip()
+    if not w:
+        return ""
+    # 去掉一个尾部斜杠后仍有斜杠、以 / 开头、含反斜杠或盘符 —— 一律拒绝
+    if "/" in w.rstrip("/") or "\\" in w or w.startswith("/") or re.match(r"^[A-Za-z]:", w):
+        raise ValueError("%s不合法：%s" % (label, work))
+    w = w.rstrip("/")
+    if w in (".", "..") or w.startswith("."):
+        raise ValueError("%s不合法：%s" % (label, work))
+    return w
+
+
+def _within(path, base):
+    """path 是否在 base 之内（用 os.sep 收尾，避免 docs 与 docs_backup 被当成同一个）。"""
+    path = os.path.normpath(path)
+    base = os.path.normpath(base)
+    return path == base or path.startswith(base + os.sep)
 
 
 def safe_name(name):
@@ -278,9 +308,11 @@ class Handler(BaseHTTPRequestHandler):
             return json_response(self, {"path": rel, "content": content, "meta": meta,
                                         "mtime": os.path.getmtime(full)})
         if route == "media":
-            work = (q.get("work") or [""])[0]
+            work = work_segment((q.get("work") or [""])[0])
             items = []
             base = os.path.join(ASSETS, work) if work else ASSETS
+            if not _within(base, ASSETS):
+                raise ValueError("作品目录不合法")
             if os.path.isdir(base):
                 for dirpath, dirnames, filenames in os.walk(base):
                     dirnames[:] = [d for d in dirnames if not d.startswith(".")]
@@ -374,8 +406,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def api_new(self, data):
         name = safe_name(data.get("name", ""))
-        work = (data.get("work") or "").strip()
+        work = work_segment(data.get("work"))
         category = (data.get("category") or "").strip().strip("/")
+        if category and any(seg in (".", "..") for seg in category.split("/")):
+            raise ValueError("分类名不合法：%s" % data.get("category"))
         if data.get("atRoot"):
             rel = "%s.md" % name
         else:
@@ -423,7 +457,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def api_upload(self, data):
         name = safe_name(os.path.basename(data.get("name", "")))
-        work = (data.get("work") or "").strip()
+        work = work_segment(data.get("work"))
         data_url = data.get("dataUrl", "")
         m = re.match(r"^data:([^;]+);base64,(.*)$", data_url, re.S)
         if not m:
@@ -461,8 +495,8 @@ class Handler(BaseHTTPRequestHandler):
         return json_response(self, {"ok": True})
 
     def api_work(self, data):
-        d = (data.get("dir") or "").strip().strip("/")
-        if not d or "/" in d:
+        d = work_segment(data.get("dir"))
+        if not d:
             raise ValueError("作品目录不合法")
         raw = data.get("json")
         parsed = json.loads(raw)
@@ -502,8 +536,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def serve_file(self, full):
         full = os.path.normpath(full)
-        allowed = (full.startswith(EDITOR_DIR) or full.startswith(DOCS) or
-                   full.startswith(ASSETS))
+        allowed = any(_within(full, base) for base in (EDITOR_DIR, DOCS, ASSETS))
         if not allowed or not os.path.isfile(full):
             return text_response(self, "404 not found", 404)
         ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
