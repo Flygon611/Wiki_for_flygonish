@@ -200,6 +200,23 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .missing-media{color:var(--red); font-size:12px; border:1px dashed var(--red); padding:1px 5px; border-radius:2px}
 .stub-notice{border:1px solid #cbd8e4; background:#f7fafd; border-radius:3px; padding:8px 12px; margin:0 0 14px; font-size:12.5px; color:#3f5a72}
 
+/* ---------------------------------------------------- 未公开作品的密码门 */
+.gate-box{border:1px solid var(--border); background:linear-gradient(180deg,#fdfefe,#f6f9fc);
+  border-radius:3px; padding:14px 16px; margin:0 0 14px; max-width:540px}
+.gate-title{font-size:15px; font-weight:700; color:#22456e; margin-bottom:6px}
+.gate-hint{margin:0 0 10px; color:#3f5a72; font-size:12.5px}
+.gate-box form{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.gate-box input[type=password]{border:1px solid var(--border); border-radius:3px; padding:5px 8px;
+  font-size:13px; width:200px; background:#fff; outline:0}
+.gate-box input[type=password]:focus{border-color:var(--accent)}
+.gate-box button{border:1px solid var(--accent-2); background:var(--accent); color:#fff;
+  border-radius:3px; padding:5px 16px; font-size:13px; cursor:pointer}
+.gate-box button:hover{background:var(--accent-2)}
+.gate-msg{color:var(--red); font-size:12.5px; margin:8px 0 0}
+.gate-msg:empty{margin:0}
+.gate-box noscript{display:block; margin-top:8px; color:#8f2b20; font-size:12.5px}
+.gate-content{margin-top:2px}
+
 /* ---------------------------------------------------- 列表页 / 卡片 */
 .list-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin:14px 0}
 .card{border:1px solid var(--border); border-radius:3px; background:linear-gradient(180deg,#fdfefe,#f4f8fb); padding:10px 12px}

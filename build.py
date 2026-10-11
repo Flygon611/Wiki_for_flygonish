@@ -31,6 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from wikicore import pages as P                                    # noqa: E402
+from wikicore.gate import gate_from_config                          # noqa: E402
 from wikicore.markdown import Renderer, Resolver, wrap_spoilers     # noqa: E402
 
 FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.S)
@@ -319,6 +320,9 @@ DEFAULT_CONFIG = {
     "extra_nav": [],
     "infobox_callouts": ["info", "note", "abstract", "summary", "example"],
     "spoiler": {"fold_headings": [], "banner_text": "本页内容包含剧情透露。"},
+    # 未公开作品的客户端密码门：works 里列出要加密的作品目录名。
+    # 密码不在配置里，从环境变量 WIKI_GATE_PASSWORD 读。
+    "gate": {"works": [], "hint": "本内容尚未公开。输入密码后查看。", "iterations": 250000},
 }
 
 
@@ -644,11 +648,16 @@ def build(root, cfg, quiet=False):
     P.ICON_DIR = os.path.join(root, cfg["assets_dir"], "icons")
     # 给 css/js 带上内容指纹：否则改了样式，用户浏览器还拿着旧的缓存，
     # 就会出现「HTML 是新的、样式是旧的」这种半新半旧的页面（踩过一次）。
+    gate_js_path = os.path.join(root, cfg["assets_dir"], "gate.js")
+    gate_js = read_text(gate_js_path) if os.path.isfile(gate_js_path) else ""
     cfg["_asset_ver"] = hashlib.sha1(
-        (P.theme_css(cfg.get("theme", {})) + P.THEME_JS + P.SEARCH_JS + P.RANDOM_JS +
+        (P.theme_css(cfg.get("theme", {})) + P.THEME_JS + P.SEARCH_JS + P.RANDOM_JS + gate_js +
          json.dumps(cfg.get("buttons", []), ensure_ascii=False)).encode("utf-8")
     ).hexdigest()[:8]
     works, pages, home = load_pages(root, cfg, verbose=not quiet)
+    # 未公开作品的密码门。配了 gate.works 却没给 WIKI_GATE_PASSWORD 时，
+    # 或者作品目录名写错时，gate_from_config 会直接 sys.exit——绝不明文照发。
+    gate = gate_from_config(cfg, works)
 
     home_body = load_page_source(home)
     all_pages = pages + [home]
@@ -660,6 +669,10 @@ def build(root, cfg, quiet=False):
 
     by_name, images = build_indexes(root, cfg, all_pages)
     resolver = Resolver(by_name, images)
+
+    def is_gated(work_dirname):
+        """这个作品（内容目录名）是否要用密码门加密。"""
+        return gate is not None and gate.covers(work_dirname)
 
     warn = 0
     for p in pages:
@@ -673,6 +686,9 @@ def build(root, cfg, quiet=False):
     for p in all_pages:
         by_rel_name.setdefault(p.name, []).append(p)
     for p in all_pages:
+        if is_gated(p.work):
+            # 加密页不能当链入来源：否则它的标题会出现在公开页面的「链入本页」里
+            continue
         for target in p.links_out:
             cands = by_rel_name.get(target, [])
             if not cands:
@@ -689,6 +705,8 @@ def build(root, cfg, quiet=False):
             log("    %s（%s）→ %s" % (tag, base, fixed), quiet)
 
     nav = build_nav(cfg, works)
+    # 页脚这行统计保持「全站总量」（含加密作品）：公开页面的产出尽量少动，
+    # 列表页（all/recent/special）才只数公开可见的那部分。
     total_images = sum(len(v) for v in images.values())
     stats = "共 %d 个页面 · %d 张图片 · 生成于 %s" % (
         len(all_pages), total_images, time.strftime("%Y-%m-%d %H:%M"))
@@ -709,32 +727,66 @@ def build(root, cfg, quiet=False):
     def render_shell(page, nav_active, *, titleblock=None, body=None, description="",
                      top_extra="", with_tabs=True, catlinks=None, blinks=None):
         base_dir = posixpath.dirname(page.out_path) if page is not None else ""
+        prefix = prefix_for(page.out_path) if page is not None else ""
+        w = works.get(page.work) if page is not None else None
+        gated = page is not None and is_gated(page.work)
         site.sidebar_boxes = make_sidebar(cfg, works, nav_active, page, backlinks, len(all_pages))
-        head_extra = work_accent_css(works.get(page.work)) if page is not None else ""
-        return P.render_layout(
-            site,
-            title="%s - %s" % (page.title if page else nav_active, site.name),
-            body=body if body is not None else (P.toc_html(page.headings, page.has_spoiler) + "\n" + page.body_html),
-            rel=prefix_for(page.out_path) if page is not None else "",
-            current_page=page,
-            head_extra=head_extra,
-            titleblock=titleblock if titleblock is not None else P.page_title_block(
+        head_extra = work_accent_css(w) if page is not None else ""
+        plain_body = body if body is not None else (
+            P.toc_html(page.headings, page.has_spoiler) + "\n" + page.body_html)
+        page_body = plain_body
+        layout_page = page
+        title = "%s - %s" % (page.title if page else nav_active, site.name)
+        if titleblock is None:
+            titleblock = P.page_title_block(
                 _html.escape(page.title),
-                [w.title for w in works.values() if w.dirname == page.work] if page and page.work else None),
-            catlinks=catlinks if catlinks is not None else (
-                catlinks_for(page, cfg, works, prefix_for(page.out_path), tag_map)
-                if page else ""),
-            backlinks=blinks if blinks is not None else (backlinks_box(page, backlinks, base_dir) if page else ""),
+                [x.title for x in works.values() if x.dirname == page.work] if page and page.work else None)
+        if catlinks is None:
+            catlinks = catlinks_for(page, cfg, works, prefix, tag_map) if page else ""
+        if blinks is None:
+            blinks = backlinks_box(page, backlinks, base_dir) if page else ""
+        navbox = (navbox_for(w, pages, prefix, cfg) if page is not None and w else "")
+        if gated:
+            # 加密页：正文换成密码门。外壳里凡是会写出条目名的地方都得让开——
+            # <title>、h1、canonical、编辑/历史链接、导航盒、链入列表、分类条，
+            # 不然对着 docs/ grep 一下就知道未公开作品里有哪些条目了。
+            # 导航盒、链入与分类条里全是条目名，不能留在外壳里，但也不该丢掉——
+            # 一起加密进正文，解锁之后读者才能照常在作品内部跳转。
+            plain_body = plain_body + blinks + navbox + catlinks
+            page_title = page.title if page else (w.title if w else gate.hint)
+            page_body = gate.box_html(gate.encrypt(
+                plain_body, page_title, "%s - %s" % (page_title, site.name)))
+            top_extra = (top_extra or "") + gate.script_tag(prefix, cfg.get("_asset_ver", ""))
+            layout_page = None          # 顺带去掉 canonical 与「编辑 / 历史」（地址里含条目名）
+            navbox = ""
+            blinks = ""
+            catlinks = ""
+            titleblock = P.page_title_block(
+                _html.escape(w.title if w else gate.hint), ["🔒 需要密码"])
+            title = "%s - %s" % ((w.title if w else gate.hint), site.name)
+            description = description or gate.hint
+        html = P.render_layout(
+            site,
+            title=title,
+            body=page_body,
+            rel=prefix,
+            current_page=layout_page,
+            head_extra=head_extra,
+            titleblock=titleblock,
+            catlinks=catlinks,
+            backlinks=blinks,
             nav_active=nav_active,
             sidebar_active=(page.work or "") if page else "",
             banner=page_banner(page, cfg, works) if page else "",
-            navbox=(navbox_for(works.get(page.work), pages, prefix_for(page.out_path), cfg)
-                    if page is not None and page.work else ""),
+            navbox=navbox,
             stats_line=stats,
             description=description or (plain_excerpt(page.body_html, 150) if page else ""),
             top_extra=top_extra,
             page_tabs=None if with_tabs else '<span class="tab active">页面</span>',
         )
+        if gated:
+            gate.check_no_leak(page.out_path, html, plain_body)
+        return html
 
     # ---- 普通条目 ----
     for page in pages:
@@ -755,7 +807,8 @@ def build(root, cfg, quiet=False):
     # ---- 作品门户 ----
     for w in works.values():
         emit(w.out_path, portal_html(cfg, works, w, site, make_sidebar, backlinks,
-                                     len(all_pages), stats))
+                                     len(all_pages), stats, gate=gate,
+                                     asset_ver=cfg.get("_asset_ver", "")))
 
     # ---- 分类页 ----
     for w in works.values():
@@ -778,31 +831,46 @@ def build(root, cfg, quiet=False):
                 blocks.append("</div>")
             if not blocks:
                 blocks.append('<p class="hit-count">这个分类下还没有条目。</p>')
+            cat_plain = "".join(blocks)
+            cat_body = cat_plain
+            cat_description = ""
+            top_extra = ""
+            gated_cat = is_gated(w.dirname)
+            if gated_cat:
+                # 分类页也列条目名和摘要，一样得进密码门
+                top_extra = gate.script_tag(prefix_for(cat.out_path), cfg.get("_asset_ver", ""))
+                cat_description = gate.hint
+                cat_body = gate.box_html(gate.encrypt(cat_plain))
             site.sidebar_boxes = make_sidebar(cfg, works, w.dirname, None, backlinks, len(all_pages))
-            emit(cat.out_path, P.render_layout(
+            cat_html = P.render_layout(
                 site, title="分类：%s - %s" % (cat.title, site.name),
-                body="".join(blocks), rel=prefix_for(cat.out_path), current_page=None,
+                body=cat_body, rel=prefix_for(cat.out_path), current_page=None,
                 nav_active=w.dirname, head_extra=work_accent_css(w),
                 titleblock=P.page_title_block("分类：%s" % _html.escape(cat.title),
                                               ["%s › %s" % (w.title, cat.path),
                                                "%d 个条目" % len(cat.pages)]),
-                stats_line=stats))
+                stats_line=stats, description=cat_description, top_extra=top_extra)
+            if gated_cat:
+                gate.check_no_leak(cat.out_path, cat_html, cat_plain)
+            emit(cat.out_path, cat_html)
 
     write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sidebar,
-                     backlinks, stats, out_dir)
+                     backlinks, stats, out_dir, gate=gate)
     write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
-                    out_dir, tag_map)
+                    out_dir, tag_map, gate)
     write_assets(root, cfg, out_dir)
-    write_search_index(cfg, works, all_pages, out_dir)
+    write_search_index(cfg, works, all_pages, out_dir, gate=gate)
     report(root, cfg, works, pages, all_pages, by_name, images, backlinks, warn, quiet)
     return len(all_pages)
 
 
 def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
-                    out_dir, tag_map=None):
+                    out_dir, tag_map=None, gate=None):
     """frontmatter 里写了「标签: [a, b]」的页面，会生成 tags/<标签>.html 供分类条链接。"""
     tags = {}
     for p in all_pages:
+        if gate is not None and gate.covers(p.work):
+            continue        # 加密作品的页面（连同它的标签）不出现在公开的标签页里
         for tag in p.tags:
             tags.setdefault(tag, []).append(p)
     if not tags:
@@ -850,7 +918,8 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
         titleblock=P.page_title_block("标签总览", ["%d 个标签" % len(tags)]), stats_line=stats))
 
 
-def portal_html(cfg, works, w, site, make_sidebar, backlinks, total_pages, stats):
+def portal_html(cfg, works, w, site, make_sidebar, backlinks, total_pages, stats,
+                gate=None, asset_ver=""):
     site.sidebar_boxes = make_sidebar(cfg, works, w.dirname, None, backlinks, total_pages)
     blocks = []
     aka = w.meta.get("aka")
@@ -884,23 +953,55 @@ def portal_html(cfg, works, w, site, make_sidebar, backlinks, total_pages, stats
     body = ('<div class="portal-hero"><div class="ph-top"><h2>%s</h2><p>%s</p></div>'
             '<div class="ph-body">%s</div></div>'
             % (_html.escape(w.title), _html.escape(w.tagline), "".join(blocks)))
-    return P.render_layout(
+    plain_body = body
+    gated = gate is not None and gate.covers(w.dirname)
+    description = w.description
+    top_extra = ""
+    if gated:
+        # 门户页整页正文（含 description、「代表条目」摘要、分类里的条目名）都要进密文；
+        # 只有作品名、分类名这类结构信息留在外壳里。
+        top_extra = gate.script_tag(prefix_for(w.out_path), asset_ver)
+        description = gate.hint
+        body = gate.box_html(gate.encrypt(plain_body))
+    html = P.render_layout(
         site, title="%s - %s" % (w.title, site.name), body=body, rel=prefix_for(w.out_path),
         current_page=None, nav_active=w.dirname, head_extra=work_accent_css(w),
         titleblock=P.page_title_block(_html.escape(w.title),
                                       ["%d 个条目" % len(w.pages), "作品门户"]),
-        stats_line=stats, description=w.description)
+        stats_line=stats, description=description, top_extra=top_extra)
+    if gated:
+        gate.check_no_leak(w.out_path, html, plain_body)
+    return html
 
 
 def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sidebar,
-                     backlinks, stats, out_dir):
+                     backlinks, stats, out_dir, gate=None):
     def emit(out_path, html):
         write_text(os.path.join(out_dir, out_path.replace("/", os.sep)), html)
+
+    def gated(work_dirname):
+        return gate is not None and gate.covers(work_dirname)
+
+    def gated_asset(rel_path):
+        parts = str(rel_path).split("/")
+        return (gate is not None and len(parts) > 2 and parts[0] == cfg["assets_dir"]
+                and gate.covers(parts[1]))
+
+    # 加密作品的页面（以及它引用的图片）不进任何公开列表：否则条目名、摘要、
+    # 甚至「哪个条目用了哪张图」都会从这些页面漏出去。
+    pub = [p for p in all_pages if not gated(p.work)]
 
     # ---- 所有页面 ----
     site.sidebar_boxes = make_sidebar(cfg, works, "all", None, backlinks, len(all_pages))
     groups = []
     for w in sorted(works.values(), key=lambda x: x.get("order", 0)):
+        if gated(w.dirname):
+            # 「这个作品存在」是公开的（侧栏、导航里都有），但条目名单不能列出来
+            groups.append('<div class="cat-block"><h3><a href="%s">%s</a>（已加密）</h3>'
+                          '<div class="pagelist"><span class="hit-count">%s</span></div></div>'
+                          % (rel_to("", w.out_path), _html.escape(w.title),
+                             _html.escape("这个作品的条目需要密码才能查看。")))
+            continue
         items = "".join('<a href="%s">%s</a>' % (rel_to("", p.out_path), _html.escape(p.title))
                         for p in sorted(w.pages, key=lambda p: p.name))
         groups.append('<div class="cat-block"><h3><a href="%s">%s</a>（%d）</h3>'
@@ -908,18 +1009,18 @@ def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sideba
                       % (rel_to("", w.out_path), _html.escape(w.title), len(w.pages), items))
     root_items = ['<a href="index.html">%s</a>' % _html.escape(home.title)]
     root_items += ['<a href="%s">%s</a>' % (rel_to("", p.out_path), _html.escape(p.title))
-                   for p in sorted((x for x in all_pages if x.is_global and not x.is_home),
+                   for p in sorted((x for x in pub if x.is_global and not x.is_home),
                                    key=lambda x: x.name)]
     head = ('<div class="cat-block"><h3>总览</h3><div class="pagelist">%s</div></div>'
             % "".join(root_items))
     emit("all.html", P.render_layout(
         site, title="所有页面 - %s" % site.name, body=head + "".join(groups), rel="",
         current_page=None, nav_active="all",
-        titleblock=P.page_title_block("所有页面", ["共 %d 个" % len(all_pages)]),
+        titleblock=P.page_title_block("所有页面", ["共 %d 个" % len(pub)]),
         stats_line=stats))
 
     # ---- 最近更新 ----
-    recent = sorted(all_pages, key=lambda p: -p.mtime)[:150]
+    recent = sorted(pub, key=lambda p: -p.mtime)[:150]
     rows = "".join(
         '<div class="recent-row"><span class="when">%s</span><span class="who">%s</span>'
         '<span style="flex:1 1 auto"><a href="%s">%s</a></span></div>'
@@ -935,7 +1036,7 @@ def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sideba
 
     # ---- 未完成的页面（红色链接汇总） ----
     missing = {}
-    for p in all_pages:
+    for p in pub:
         for t in getattr(p, "missing_links", set()) or set():
             missing.setdefault(t, []).append(p)
     rows = []
@@ -963,20 +1064,25 @@ def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sideba
 
     # ---- 特殊页面 ----
     by_name, images = build_indexes(root, cfg, all_pages)
+    pub_images = {}
+    for k, v in images.items():
+        keep = [r for r in v if not gated_asset(r)]
+        if keep:
+            pub_images[k] = keep
     cats = "".join('<a class="chip" href="%s">%s › %s <span style="color:#7b8794">%d</span></a>'
                    % (rel_to("", c.out_path), _html.escape(w.title), _html.escape(c.title), len(c.pages))
                    for w in sorted(works.values(), key=lambda x: x.get("order", 0))
                    for c in w.sorted_categories())
     media = "".join('<a class="chip" href="%s">%s</a>' % (rel_to("", v[0]), _html.escape(k))
-                    for k, v in sorted(images.items()))
-    n_media = sum(len(v) for v in images.values())
+                    for k, v in sorted(pub_images.items()))
+    n_media = sum(len(v) for v in pub_images.values())
     body = ('<h2>统计</h2><p>页面 %d 个（其中小作品 %d 个）· 图片 %d 张 · 分类 %d 个</p>'
             '<h2>分类</h2><p>%s</p><h2 id="media">全部图片</h2>'
             '<p class="hit-count">共 %d 张</p><p>%s</p>'
             '<h2>工具</h2><p><a href="all.html">所有页面</a> · <a href="recent.html">最近更新</a> · '
             '<a href="random.html">随机页面</a> · <a href="search.html">搜索</a> · '
             '<a href="missing.html">未完成的页面</a></p>'
-            % (len(all_pages), sum(1 for p in all_pages if p.is_stub), n_media,
+            % (len(pub), sum(1 for p in pub if p.is_stub), n_media,
                sum(len(w.categories) for w in works.values()), cats or "（无）", n_media, media))
     site.sidebar_boxes = make_sidebar(cfg, works, "special", None, backlinks, len(all_pages))
     emit("special.html", P.render_layout(
@@ -1035,9 +1141,13 @@ def write_assets(root, cfg, out_dir):
     write_text(os.path.join(out_dir, ".nojekyll"), "")
 
 
-def write_search_index(cfg, works, all_pages, out_dir):
+def write_search_index(cfg, works, all_pages, out_dir, gate=None):
     items = []
     for p in all_pages:
+        if gate is not None and gate.covers(p.work):
+            # 加密作品的页面完全不进搜索索引：标题、别名、摘要都是线索。
+            # 搜索栏和「随机页面」都读这份 search.json，所以它们也不会带出这些条目。
+            continue
         w = works.get(p.work)
         keys = [p.name] + list(p.tags) + list(p.aliases)
         if w:

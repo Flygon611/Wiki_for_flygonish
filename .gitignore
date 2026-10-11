@@ -12,3 +12,11 @@ content/.trash/
 
 # 编辑器/构建的临时产物
 *.log
+
+# 未公开作品《想要飞的始祖小鸟》的正文不进公开仓库。
+# 源文件只留在本地与 Obsidian 库；对外发布的是 docs/ 里加密后的页面。
+# 构建时需要密码，见 wiki.config.json 的 gate 段与 README。
+content/想要飞的始祖小鸟/
+
+# 密码文件（如果你用文件代替环境变量，绝不要提交）
+.gate-password

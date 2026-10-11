@@ -105,5 +105,10 @@
   "navbox": {
     "enabled": true,
     "collapsed": false
+  },
+  "gate": {
+    "works": ["想要飞的始祖小鸟"],
+    "hint": "本作尚未公开。输入密码后查看。",
+    "iterations": 250000
   }
 }
