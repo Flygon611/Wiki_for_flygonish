@@ -101,11 +101,12 @@ class Resolver:
 
 
 class Renderer:
-    def __init__(self, resolver, config, current=None, url_prefix=None):
+    def __init__(self, resolver, config, current=None, url_prefix=None, edit_url=None):
         self.r = resolver
         self.cfg = config
         self.current = current                  # 当前 Page（用于算相对路径），首页为 None
         self.url_prefix = url_prefix            # 编辑器预览用：所有链接改成 /site/... 绝对路径
+        self.edit_url = edit_url                # 有值时，h2/h3 右侧显示 MediaWiki 那种 [编辑]
         self.headings = []                      # [(level, anchor, text, in_spoiler)]
         self.warnings = []
         self.links_out = set()                  # 本页指向的其他页面名
@@ -246,9 +247,14 @@ class Renderer:
                 plain = re.sub(r"[*`\[\]]|!\[\[|\]\]", "", text_h)
                 self.headings.append({"level": level, "anchor": anchor, "text": plain,
                                       "spoiler": self._is_spoiler(text_h), "nested": False})
-                out.append('<h%d id="%s">%s<span class="anchor">'
+                edit = ""
+                if self.edit_url and level in (2, 3):
+                    edit = ('<span class="editsection">[<a href="%s" target="_blank" '
+                            'rel="noopener" title="在 GitHub 上编辑这一页">编辑</a>]</span>'
+                            % self.edit_url)
+                out.append('<h%d id="%s">%s%s<span class="anchor">'
                            '<a href="#%s" title="锚点">¶</a></span></h%d>'
-                           % (level, anchor, self.inline(text_h), anchor, level))
+                           % (level, anchor, edit, self.inline(text_h), anchor, level))
                 i += 1
                 continue
 

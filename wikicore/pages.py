@@ -283,6 +283,45 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .sbtn img{display:block; border:0; image-rendering:pixelated}
 .sbtn:hover img{outline:1px solid var(--accent); outline-offset:1px}
 .site-footer .credit{margin-top:4px; font-size:11px; color:#8a949e}
+
+/* ---------------------------------------------------- 条目状态横幅（mbox） */
+.mbox{border:1px solid #a8c4e8; background:#eaf3fb; border-radius:3px; padding:7px 12px;
+  margin:0 0 14px; font-size:12.5px; color:#24466b; display:flex; gap:9px; align-items:flex-start;
+  clear:both; overflow:hidden}
+.mbox .mbox-icon{flex:0 0 auto; margin-top:1px}
+.mbox b{font-weight:700}
+.mbox-content{background:#eaf3fb; border-color:#a8c4e8; color:#24466b}
+.mbox-clean{background:#fdf6e3; border-color:#e0c060; color:#7a5c10}
+.mbox-warn{background:#fdf1ef; border-color:#e0a79c; color:#8f2b20}
+.mbox-ok{background:#f0f8f1; border-color:#a9d3b0; color:#2f6b3c}
+/* MediaWiki 那种章节旁的 [编辑] */
+.article h2 .editsection,.article h3 .editsection{float:right; font-size:11px; font-weight:400;
+  font-family:"Helvetica Neue",Arial,sans-serif; color:var(--muted); margin-left:8px}
+.article h2 .editsection a,.article h3 .editsection a{color:var(--link)}
+
+/* ---------------------------------------------------- 词条导航盒（navbox） */
+.navbox{border:1px solid #a8c4e8; border-radius:3px; background:#f7fbff; margin:18px 0 0;
+  font-size:12.5px; clear:both}
+.navbox-head{display:flex; align-items:center; gap:8px; padding:4px 9px;
+  background:linear-gradient(180deg,#e2eefc,#b9d3f2); border-bottom:1px solid #a8c4e8}
+.navbox-head .nb-links{flex:0 0 auto; font-size:11.5px; color:#33507a; min-width:3.5em}
+.navbox-head .nb-links a{color:#0b5fa5}
+.navbox-head .nb-title{flex:1 1 auto; text-align:center; font-weight:700; color:#24466b; font-size:13px}
+.navbox-head .nb-toggle{flex:0 0 auto; cursor:pointer; color:#0b5fa5; font-size:11.5px;
+  user-select:none; min-width:3.5em; text-align:right}
+.navbox-head .nb-toggle:hover{text-decoration:underline}
+.navbox-table{width:100%; border-collapse:collapse}
+.navbox-table th,.navbox-table td{border:1px solid #cfe0f5; padding:4px 9px; vertical-align:middle}
+.navbox-table .nb-group{background:#dbe9fb; color:#24466b; font-weight:700; text-align:center;
+  width:5.2em; white-space:nowrap}
+.navbox-table .nb-sub{background:#eef5fd; color:#33507a; font-weight:700; text-align:center;
+  width:7em; white-space:nowrap}
+.navbox-table .nb-list{background:#fff; text-align:left; line-height:2}
+.navbox-table .nb-list a:hover{text-decoration:underline}
+.navbox .nb-sep{color:#9db4cc; margin:0 5px}
+.navbox .nb-missing{color:var(--red)}
+.navbox.collapsed .navbox-table{display:none}
+.navbox.collapsed .navbox-head{border-bottom:0}
 .site-footer .fbrand{color:var(--accent-2); font-weight:700}
 .site-footer .fnav{margin-bottom:6px}
 .site-footer .fnav a{margin:0 7px}
@@ -387,6 +426,14 @@ THEME_JS = r"""
   document.querySelectorAll('.spoiler-banner .dismiss').forEach(function(b){
     b.addEventListener('click', function(){ b.closest('.spoiler-banner').style.display = 'none'; });
   });
+
+  // ---------- 词条导航折叠 ----------
+  document.querySelectorAll('.navbox .nb-toggle').forEach(function(t){
+    t.addEventListener('click', function(){
+      var off = t.closest('.navbox').classList.toggle('collapsed');
+      t.textContent = off ? '[展开]' : '[折叠]';
+    });
+  });
 })();
 """
 
@@ -489,7 +536,7 @@ class Site:
 def render_layout(site, *, title, body, rel, current_page=None, article_class="article",
                   page_tabs=None, subtitle="", catlinks="", backlinks="", head_extra="",
                   description="", nav_active="", sidebar_active="", top_extra="",
-                  banner="", stats_line="", titleblock=""):
+                  banner="", stats_line="", titleblock="", navbox=""):
     """生成整页 HTML。rel 是回到 docs/ 根的相对前缀，形如 '../..' 或 '..'，首页为 ''。"""
     base = rel
     repo = site.repo
@@ -635,8 +682,9 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
       %(banner)s
       %(titleblock)s
       <div class="%(article_class)s">%(body)s</div>
-      %(catlinks)s
       %(backlinks)s
+      %(navbox)s
+      %(catlinks)s
     </div>
   </main>
 </div>
@@ -677,6 +725,7 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         "body": body,
         "catlinks": catlinks,
         "backlinks": backlinks,
+        "navbox": navbox,
         "head_extra": head_extra,
         "body_extra": top_extra,
         "icon": esc(icon_file),
@@ -741,6 +790,88 @@ def backlinks_html(items):
     body = "、".join('<a href="%s">%s</a>' % (esc(u), esc(t)) for t, u in items)
     return '<div class="backlinks" id="backlinks"><div class="bl-title">链入本页的页面（%d）</div>%s</div>' % (
         len(items), body)
+
+
+MBOX_KINDS = {
+    "内容": ("mbox-content", "information.png"),
+    "扩充": ("mbox-content", "pencil.png"),
+    "小作品": ("mbox-content", "pencil.png"),
+    "清理": ("mbox-clean", "exclamation.png"),
+    "翻译": ("mbox-clean", "exclamation.png"),
+    "来源": ("mbox-clean", "exclamation.png"),
+    "警告": ("mbox-warn", "exclamation.png"),
+}
+
+# 状态 → 提示文字。frontmatter 里写「状态: 扩充」即可
+STATUS_TEXT = {
+    "扩充": "本条目内容还比较少，欢迎补充。",
+    "小作品": "这是一篇小作品。你可以帮忙扩充它。",
+    "清理": "本条目需要清理，格式或行文可能需要调整。",
+    "翻译": "本条目有未翻译的内容。",
+    "来源": "本条目缺少来源，欢迎补充出处。",
+    "警告": "本条目包含可能引起不适的内容。",
+}
+
+
+def mbox(status, text=None, base=""):
+    """MediaWiki 那种消息框（模板 {{mbox}} 的位置）。"""
+    kind, ico = MBOX_KINDS.get(status, ("mbox-content", "information.png"))
+    body = text or STATUS_TEXT.get(status, "")
+    if not body:
+        return ""
+    return ('<div class="mbox %s"><span class="mbox-icon">%s</span>'
+            '<span class="mbox-text">%s</span></div>'
+            % (kind, icon(ico, base, 16), body))
+
+
+def navbox_html(title, groups, view_url="", edit_url="", collapsed=False):
+    """MediaWiki 那种「词条导航盒」。
+
+    groups 结构：
+        [{"label": "角色", "rows": [{"label": "自机", "items": [(显示名, url, 是否红链)]}]},
+         {"label": "场景",  "items": [(...)]}]
+    单层的直接给 items，双层的给 rows。
+    """
+    if not groups:
+        return ""
+
+    def one_line(items):
+        parts = []
+        for text, url, missing in items:
+            cls = ' class="nb-missing"' if missing else ""
+            parts.append('<a%s href="%s">%s</a>' % (cls, esc(url), esc(text)))
+        return '<span class="nb-sep">·</span>'.join(parts)
+
+    rows_html = []
+    for g in groups:
+        sub = g.get("rows")
+        if sub:
+            for i, r in enumerate(sub):
+                head = ('<th class="nb-group" rowspan="%d">%s</th>' % (len(sub), esc(g["label"]))
+                        if i == 0 else "")
+                rows_html.append('<tr>%s<th class="nb-sub">%s</th><td class="nb-list">%s</td></tr>'
+                                 % (head, esc(r.get("label", "")), one_line(r.get("items", []))))
+        else:
+            rows_html.append('<tr><th class="nb-group">%s</th><td class="nb-list" colspan="2">%s</td></tr>'
+                             % (esc(g["label"]), one_line(g.get("items", []))))
+
+    links = []
+    if view_url:
+        links.append('<a href="%s" title="查看该作品的条目总览">查</a>' % esc(view_url))
+    if edit_url:
+        links.append('<a href="%s" target="_blank" rel="noopener" title="在 GitHub 上编辑这个导航">编</a>'
+                     % esc(edit_url))
+    head_links = '<span class="nb-sep">·</span>'.join(links)
+
+    return ('<div class="navbox%s">'
+            '<div class="navbox-head">'
+            '<span class="nb-links">%s</span>'
+            '<span class="nb-title">%s</span>'
+            '<span class="nb-toggle" title="收起或展开这个导航">%s</span>'
+            '</div>'
+            '<table class="navbox-table">%s</table>'
+            '</div>') % (" collapsed" if collapsed else "", head_links, esc(title),
+                         "[展开]" if collapsed else "[折叠]", "".join(rows_html))
 
 
 def now_str():

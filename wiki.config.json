@@ -14,14 +14,49 @@
   "site_url": "https://flygon611.github.io/Wiki_for_flygonish",
   "icon_credit": "图标素材：<a href=\"https://p.yusukekamiyamane.com/\" target=\"_blank\" rel=\"noopener\">Fugue Icons</a> (C) 2013 Yusuke Kamiyamane，<a href=\"http://creativecommons.org/licenses/by/3.0/\" target=\"_blank\" rel=\"noopener\">CC BY 3.0</a> 授权",
   "buttons": [
-    { "img": "buttons/见远观星集.png", "alt": "见远观星集", "href": "index.html", "title": "本站首页" },
-    { "img": "buttons/SINCE-2010.png", "alt": "Since 2010 手写 HTML", "title": "SINCE 2010 · 手写 HTML" },
-    { "img": "buttons/BEST-VIEWED-1024x768.png", "alt": "Best viewed 1024x768", "title": "Best viewed in 1024×768" },
-    { "img": "buttons/NO-FRAME-NO-ADS.png", "alt": "No frame no ads", "title": "无框架 · 无广告" },
-    { "img": "buttons/MADE-BY-HAND.png", "alt": "此站由人手绘", "title": "此站由 人手绘" },
-    { "img": "buttons/POWERED-BY-PYTHON.png", "alt": "Powered by Python 3", "title": "Powered by Python 3" },
-    { "img": "buttons/EST-2010.png", "alt": "Est. 2010", "title": "EST. 2010" },
-    { "img": "buttons/anybrowser-abchinese.gif", "alt": "任何瀏覽器適用", "href": "http://anybrowser.org/campaign/", "ext": true, "title": "Viewable with Any Browser 运动（图片经作者授权使用）" }
+    {
+      "img": "buttons/见远观星集.png",
+      "alt": "见远观星集",
+      "href": "index.html",
+      "title": "本站首页"
+    },
+    {
+      "img": "buttons/SINCE-2010.png",
+      "alt": "Since 2010 手写 HTML",
+      "title": "SINCE 2010 · 手写 HTML"
+    },
+    {
+      "img": "buttons/BEST-VIEWED-1024x768.png",
+      "alt": "Best viewed 1024x768",
+      "title": "Best viewed in 1024×768"
+    },
+    {
+      "img": "buttons/NO-FRAME-NO-ADS.png",
+      "alt": "No frame no ads",
+      "title": "无框架 · 无广告"
+    },
+    {
+      "img": "buttons/MADE-BY-HAND.png",
+      "alt": "此站由人手绘",
+      "title": "此站由 人手绘"
+    },
+    {
+      "img": "buttons/POWERED-BY-PYTHON.png",
+      "alt": "Powered by Python 3",
+      "title": "Powered by Python 3"
+    },
+    {
+      "img": "buttons/EST-2010.png",
+      "alt": "Est. 2010",
+      "title": "EST. 2010"
+    },
+    {
+      "img": "buttons/anybrowser-abchinese.gif",
+      "alt": "任何瀏覽器適用",
+      "href": "http://anybrowser.org/campaign/",
+      "ext": true,
+      "title": "Viewable with Any Browser 运动（图片经作者授权使用）"
+    }
   ],
   "theme": {
     "accent": "#3a6ea5",
@@ -46,9 +81,28 @@
     "edit": true
   },
   "spoiler": {
-    "fold_headings": ["第二季", "第三季", "番外", "1.5", "结局", "真相", "幕后", "剧透"],
+    "fold_headings": [
+      "第二季",
+      "第三季",
+      "番外",
+      "1.5",
+      "结局",
+      "真相",
+      "幕后",
+      "剧透"
+    ],
     "banner_text": "本页包含剧情透露。标有 🔒 的小节默认折叠，读完第一季再展开也不迟。"
   },
-  "infobox_callouts": ["info", "note", "abstract", "summary", "example"],
-  "extra_nav": []
+  "infobox_callouts": [
+    "info",
+    "note",
+    "abstract",
+    "summary",
+    "example"
+  ],
+  "extra_nav": [],
+  "navbox": {
+    "enabled": true,
+    "collapsed": false
+  }
 }

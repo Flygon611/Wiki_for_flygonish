@@ -80,4 +80,12 @@
   document.querySelectorAll('.spoiler-banner .dismiss').forEach(function(b){
     b.addEventListener('click', function(){ b.closest('.spoiler-banner').style.display = 'none'; });
   });
+
+  // ---------- 词条导航折叠 ----------
+  document.querySelectorAll('.navbox .nb-toggle').forEach(function(t){
+    t.addEventListener('click', function(){
+      var off = t.closest('.navbox').classList.toggle('collapsed');
+      t.textContent = off ? '[展开]' : '[折叠]';
+    });
+  });
 })();

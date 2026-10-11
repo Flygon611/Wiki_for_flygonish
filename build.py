@@ -439,13 +439,31 @@ def load_page_source(p):
     return body
 
 
+def edit_url_for(p, cfg):
+    """这一页在 GitHub 上的编辑地址（配了 repo 才有）。"""
+    repo = cfg.get("repo", {})
+    if not (repo.get("url") and repo.get("edit")):
+        return ""
+    return "%s/edit/%s/%s/%s" % (repo["url"], repo.get("branch", "main"),
+                                 repo.get("content_path", "content"), quote(p.rel))
+
+
 def render_body(p, body, resolver, cfg):
-    r = Renderer(resolver, cfg, current=p)
+    r = Renderer(resolver, cfg, current=p, edit_url=edit_url_for(p, cfg))
     html = r.render(body)
     if not body.strip():
         html = ('<div class="stub-notice">%s这个页面还没有内容。在编辑器的「新建 / 编辑页面」里打开 '
                 '<b>%s</b> 就能开始写设定了。</div>'
                 % (P.icon("pencil.png", prefix_for(p.out_path), 15), _html.escape(p.rel)))
+    status = p.meta.get("状态") or p.meta.get("status")
+    if status and not p.is_stub:
+        names = [status] if isinstance(status, str) else list(status)
+        banners = []
+        for name in names:
+            name = str(name).strip()
+            custom = p.meta.get("状态说明") if len(names) == 1 else None
+            banners.append(P.mbox(name, custom, prefix_for(p.out_path)))
+        html = "".join(b for b in banners if b) + html
     html, folded = wrap_spoilers(html, r.headings)
     p.body_html = html
     p.headings = r.headings
@@ -520,6 +538,72 @@ def work_accent_css(w):
         return ""
     return ("<style>:root{--accent:%s;--accent-2:%s;--accent-3:%s}</style>"
             % (w.accent, shade(w.accent, 0.68), shade(w.accent, 1.45)))
+
+
+def navbox_groups_for(work, pages, prefix):
+    """产出一个作品的词条导航结构。
+
+    _作品.json 里写了 navbox 就用它（可以自由分组，像东方 Wiki 那样）；
+    没写就按分类自动生成一份，至少不会空着。
+
+    prefix 是「当前页面回到站点根」的前缀（'' / '../' / '../../'）—— 导航盒出现在
+    任意深度的页面上，href 必须相对当前页面算，不能直接用站根路径。
+    """
+    missing_url = prefix + "missing.html"
+
+    def to_items(names):
+        items = []
+        for name in names:
+            hit = next((p for p in pages if p.name == name), None)
+            if hit is not None:
+                items.append((hit.title, prefix + hit.url, False))
+            else:
+                items.append((name, missing_url + "?page=" + quote(name), True))
+        return items
+
+    cfg_nb = work.meta.get("navbox")
+    if cfg_nb:
+        groups = []
+        for g in cfg_nb.get("groups", []):
+            if g.get("rows"):
+                groups.append({"label": g.get("label", ""), "rows": [
+                    {"label": r.get("label", ""), "items": to_items(r.get("pages", []))}
+                    for r in g["rows"]]})
+            else:
+                groups.append({"label": g.get("label", ""), "items": to_items(g.get("pages", []))})
+        return groups, (cfg_nb.get("title") or work.title)
+
+    # 自动兜底：按分类来
+    groups = []
+    for cat in work.sorted_categories():
+        if cat.parent:
+            continue
+        if cat.children:
+            groups.append({"label": cat.title, "rows": [
+                {"label": c.title, "items": to_items([p.name for p in sorted(c.pages, key=lambda x: x.name)])}
+                for c in sorted(cat.children, key=lambda c: c.name)]})
+        elif cat.pages:
+            groups.append({"label": cat.title,
+                           "items": to_items([p.name for p in sorted(cat.pages, key=lambda x: x.name)])})
+    return groups, work.title
+
+
+def navbox_for(work, pages, prefix, cfg):
+    """作品页面底部的词条导航。返回 HTML（没有内容就返回空串）。"""
+    if not work or not cfg.get("navbox", {}).get("enabled", True):
+        return ""
+    groups, title = navbox_groups_for(work, pages, prefix)
+    if not groups:
+        return ""
+    view = prefix + work.url
+    edit = ""
+    repo = cfg.get("repo", {})
+    if repo.get("url") and repo.get("edit"):
+        edit = "%s/edit/%s/%s/%s" % (
+            repo["url"], repo.get("branch", "main"), repo.get("content_path", "content"),
+            quote(work.dirname + "/_作品.json", safe="/"))
+    return P.navbox_html(title, groups, view_url=view, edit_url=edit,
+                         collapsed=bool(cfg.get("navbox", {}).get("collapsed", False)))
 
 
 def catlinks_for(page, cfg, works, prefix="", tag_map=None):
@@ -642,6 +726,8 @@ def build(root, cfg, quiet=False):
             nav_active=nav_active,
             sidebar_active=(page.work or "") if page else "",
             banner=page_banner(page, cfg, works) if page else "",
+            navbox=(navbox_for(works.get(page.work), pages, prefix_for(page.out_path), cfg)
+                    if page is not None and page.work else ""),
             stats_line=stats,
             description=description or (plain_excerpt(page.body_html, 150) if page else ""),
             top_extra=top_extra,
