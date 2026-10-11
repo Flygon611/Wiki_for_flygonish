@@ -645,7 +645,7 @@ def build(root, cfg, quiet=False):
                % (_html.escape(site.name), _html.escape(site.tagline)))
     site.sidebar_boxes = make_sidebar(cfg, works, "home", home, backlinks, len(all_pages))
     emit("index.html", P.render_layout(
-        site, title="%s - %s" % (home.title, site.name),
+        site, title=site.name,        # 首页标题直接用站名，不必写成「首页 - 站名」
         body=(P.toc_html(home.headings, home.has_spoiler) + "\n" + home.body_html),
         rel="", current_page=home, titleblock=home_tb, nav_active="home",
         catlinks="", backlinks="", banner=page_banner(home, cfg, works),
