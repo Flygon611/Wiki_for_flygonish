@@ -130,9 +130,12 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .wikimg{border:1px solid var(--border-soft); background:#fff; padding:2px; height:auto}
 .center-img{text-align:center}
 
-.wikitable{border-collapse:collapse; margin:12px 0; font-size:12.5px; background:#fff}
+.wikitable{border-collapse:collapse; margin:12px 0; font-size:12.5px; background:#fff; max-width:100%}
 .wikitable th,.wikitable td{border:1px solid var(--border); padding:5px 9px; text-align:left; vertical-align:top}
-.wikitable th,.article table:not(.wikitable) th{white-space:nowrap}
+/* 只让「表头行」不折行。正文单元格有时也用 <th>（作者手写的表格），
+   对它们也 nowrap 会让宽表格冲出内容区。 */
+.wikitable thead th,.article table:not(.wikitable) tr:first-child th{white-space:nowrap}
+.article table:not(.wikitable) th,.article table:not(.wikitable) td{word-break:break-word}
 .wikitable thead th{background:linear-gradient(180deg,var(--box-head-a),var(--box-head-b)); color:#22456e}
 .article table:not(.wikitable):not(.infobox-table){border-collapse:collapse; margin:12px 0; font-size:12.5px}
 .article table:not(.wikitable):not(.infobox-table) th,
@@ -595,13 +598,13 @@ def page_title_block(h1, subtitle_items=None):
 
 
 def toc_html(headings, has_spoiler):
-    if len([h for h in headings if h["level"] <= 3]) < 3:
+    # 只列 h2/h3，且排除嵌套在 callout / 信息框 / 引用块里的标题
+    listed = [h for h in headings if 2 <= h["level"] <= 3 and not h.get("nested")]
+    if len(listed) < 3:
         return ""
     out = ['<div class="toc"><div class="toc-head">目录 <span class="toggle">[隐藏]</span></div><ol>']
     level = 2
-    for h in headings:
-        if h["level"] < 2 or h["level"] > 3:
-            continue
+    for h in listed:
         if h["level"] > level:
             out.append("<ol>")
         elif h["level"] < level:

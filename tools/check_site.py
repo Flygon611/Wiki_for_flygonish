@@ -18,11 +18,83 @@ import json
 import os
 import re
 import sys
+from html.parser import HTMLParser
 from urllib.parse import unquote, urlsplit
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ATTR_RE = re.compile(r'(?:href|src)\s*=\s*"([^"]*)"', re.I)
 DATA_INDEX_RE = re.compile(r'data-index\s*=\s*"([^"]*)"', re.I)
+
+VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+             "meta", "param", "source", "track", "wbr"}
+KNOWN_TAGS = ({"html", "head", "body", "title", "style", "script", "div", "span", "p",
+               "a", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td",
+               "h1", "h2", "h3", "h4", "h5", "h6", "aside", "nav", "article", "footer",
+               "header", "main", "section", "figure", "figcaption", "center", "details",
+               "summary", "blockquote", "code", "mark", "b", "i", "s", "em", "strong",
+               "del", "dl", "dt", "dd", "pre", "form", "button", "label", "select",
+               "option", "datalist", "textarea", "small", "sub", "sup", "hr", "br"}) | VOID_TAGS
+
+
+class BalanceChecker(HTMLParser):
+    """检查标签是否配平。只看已知标签，避免把正文里的 `->`、`<3` 当成标签。"""
+
+    def __init__(self):
+        HTMLParser.__init__(self, convert_charrefs=True)
+        self.stack = []
+        self.problems = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in KNOWN_TAGS and tag not in VOID_TAGS:
+            self.stack.append((tag, self.getpos()[0]))
+
+    def handle_startendtag(self, tag, attrs):
+        pass
+
+    def handle_endtag(self, tag):
+        if tag not in KNOWN_TAGS or tag in VOID_TAGS:
+            return
+        line = self.getpos()[0]
+        names = [t for t, _ in self.stack]
+        if not self.stack:
+            self.problems.append("第 %d 行：多余的 </%s>" % (line, tag))
+            return
+        if self.stack[-1][0] == tag:
+            self.stack.pop()
+            return
+        if tag in names:
+            idx = len(names) - 1 - names[::-1].index(tag)
+            unclosed = [t for t, _ in self.stack[idx + 1:]]
+            self.problems.append("第 %d 行：</%s> 错位，未闭合 %s" % (line, tag, unclosed))
+            del self.stack[idx:]
+        else:
+            self.problems.append("第 %d 行：多余的 </%s>" % (line, tag))
+
+
+def check_tag_balance(docs):
+    bad, n = [], 0
+    for dirpath, dirnames, filenames in os.walk(docs):
+        for name in filenames:
+            if not name.endswith(".html"):
+                continue
+            full = os.path.join(dirpath, name)
+            n += 1
+            with open(full, encoding="utf-8") as f:
+                html = f.read()
+            p = BalanceChecker()
+            try:
+                p.feed(html)
+                p.close()
+            except Exception as e:                              # noqa: BLE001
+                bad.append((os.path.relpath(full, docs), "解析失败：%s" % e))
+                continue
+            rel = os.path.relpath(full, docs).replace(os.sep, "/")
+            for msg in p.problems:
+                bad.append((rel, msg))
+            if p.stack:
+                bad.append((rel, "文末仍未闭合：" + str([t for t, _ in p.stack])))
+    print("标签配平：扫描 %d 个 HTML%s" % (n, "" if not bad else "，发现不配平"))
+    return bad
 
 
 def check_search_links(docs):
@@ -127,6 +199,7 @@ def check(docs, list_pages=False):
         print("外部链接域名：%s" % "、".join(sorted(external)))
     broken += check_search_links(docs)
     broken += check_theme_js(docs)
+    broken += check_tag_balance(docs)
     if broken:
         print("\n❌ 有 %d 处引用指向不存在的文件：" % len(broken))
         for page, ref in broken[:60]:

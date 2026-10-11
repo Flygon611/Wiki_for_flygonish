@@ -46,6 +46,12 @@ ASSETS = os.path.join(ROOT, "assets")
 DOCS = os.path.join(ROOT, "docs")
 TRASH = os.path.join(CONTENT, ".trash")
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".avif"}
+# 允许上传的位图类型（不含 svg：同源直出的 svg 可以被塞进脚本）
+UPLOAD_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".avif"}
+MIME_BY_EXT = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+               ".gif": "image/gif", ".webp": "image/webp", ".bmp": "image/bmp",
+               ".avif": "image/avif"}
+MIME_OK = set(MIME_BY_EXT.values())
 
 _build_lock = threading.Lock()
 _last_build = {"at": None, "out": "", "ok": None}
@@ -155,6 +161,9 @@ def state_payload():
     globals_ = []
     if home is not None:
         globals_.append({"path": home.rel, "name": home.name, "title": home.title,
+                         "category": "", "categoryTitle": "总览"})
+    for p in sorted((x for x in pages if x.work is None), key=lambda x: x.name):
+        globals_.append({"path": p.rel, "name": p.name, "title": p.title,
                          "category": "", "categoryTitle": "总览"})
     work_meta = [{"dir": w.dirname, "title": w.title, "tagline": w.tagline,
                   "accent": w.accent, "order": w.get("order", 0),
@@ -347,9 +356,43 @@ class Handler(BaseHTTPRequestHandler):
 
     # -------------------------------------------------- POST
 
+    def _csrf_guard(self, path):
+        """挡住跨站请求伪造。
+
+        服务只监听 127.0.0.1，但任意网页都能向你本机的这个端口盲发 POST：
+        `text/plain` 属于 CORS「简单请求」，浏览器不发预检，于是能触发写文件、删页面、
+        提交甚至推送。这里要求 JSON Content-Type（跨源时会强制预检，而我们不返回
+        CORS 头，浏览器就会拦下），并校验 Origin / Sec-Fetch-Site。
+        """
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            json_response(self, {"error": "只接受 Content-Type: application/json"
+                                          "（收到 %r）" % ctype}, 403)
+            return False
+        origin = self.headers.get("Origin")
+        if origin:
+            port = self.server.server_port
+            allowed = ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
+            if origin not in allowed:
+                json_response(self, {"error": "拒绝来自 %s 的跨站请求" % origin}, 403)
+                return False
+        if (self.headers.get("Sec-Fetch-Site") or "").lower() == "cross-site":
+            json_response(self, {"error": "拒绝跨站请求"}, 403)
+            return False
+        return True
+
+    def do_OPTIONS(self):
+        # 不返回任何 CORS 头：让浏览器的预检直接失败
+        self.send_response(405)
+        self.send_header("Allow", "GET, POST")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_POST(self):
         parts = urlsplit(self.path)
         path = unquote(parts.path)
+        if path.startswith("/api/") and not self._csrf_guard(path):
+            return
         try:
             length = int(self.headers.get("Content-Length") or 0)
             raw = self.rfile.read(length) if length else b"{}"
@@ -463,8 +506,18 @@ class Handler(BaseHTTPRequestHandler):
         if not m:
             raise ValueError("图片数据格式不对")
         ext = os.path.splitext(name)[1].lower()
-        if ext not in IMAGE_EXT:
-            raise ValueError("不支持的文件类型：%s" % ext)
+        # SVG 能内嵌脚本，而 /media/*.svg 是同源直出，等同于存储型 XSS，所以只允许位图
+        if ext not in UPLOAD_EXT:
+            raise ValueError("不支持的文件类型：%s（可上传：%s）"
+                             % (ext, "、".join(sorted(UPLOAD_EXT))))
+        mime = m.group(1).split(";")[0].strip().lower()
+        if mime not in MIME_OK:
+            raise ValueError("data URL 的 MIME 类型不受支持：%s" % mime)
+        if mime != MIME_BY_EXT.get(ext):
+            raise ValueError("扩展名 %s 与声明的类型 %s 不一致" % (ext, mime))
+        # 先用 base64 长度粗筛，别把超大请求整个解码进内存
+        if len(m.group(2)) > 34 * 1024 * 1024:
+            raise ValueError("图片超过 25MB")
         blob = base64.b64decode(m.group(2))
         if len(blob) > 25 * 1024 * 1024:
             raise ValueError("图片超过 25MB")

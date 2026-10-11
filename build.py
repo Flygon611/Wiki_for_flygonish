@@ -65,6 +65,16 @@ def rel_to(base_dir, out_path):
     return quote(rp, safe="/-_.~!$&'()*+,;=:@")
 
 
+def tag_filename(tag):
+    """标签 → 文件名 / URL 片段。
+
+    落盘名字和 href 里解码后的名字必须是同一份字符串，否则会 404。
+    这里先把文件系统不安全的字符换掉，href 再对它做百分号编码。
+    """
+    s = re.sub(r'[\\/:*?"<>|\x00-\x1f]', "_", str(tag)).strip().strip(".")
+    return s or "_"
+
+
 def prefix_for(out_path):
     """从 docs/ 下某个输出文件回到 docs/ 根的相对前缀（'' / '../' / '../../'）。"""
     d = posixpath.dirname(out_path)
@@ -226,6 +236,7 @@ class Page:
             self.category = "/".join(parts[1:-1])
         self.meta = {}
         self.title = self.name
+        self.is_home = False          # 只有 content/首页.md 会被置为 True
         self.tags = []
         self.aliases = []
         self.spoiler_flag = None
@@ -239,13 +250,17 @@ class Page:
         self.mtime = 0
 
     @property
-    def is_home(self):
+    def is_global(self):
+        """顶层页面（不在任何作品目录里），例如首页。"""
         return self.work is None
 
     @property
     def out_path(self):
         if self.is_home:
             return "index.html"
+        if self.work is None:
+            # 其他顶层页面：生成到 docs/<名字>.html，别让它们消失
+            return "%s.html" % self.name
         cat = (self.category + "/") if self.category else ""
         return "%s/%s%s.html" % (self.work, cat, self.name)
 
@@ -292,12 +307,14 @@ def load_config(root):
     return cfg
 
 
-def load_pages(root, cfg):
+def load_pages(root, cfg, verbose=False):
     content_dir = os.path.join(root, cfg["content_dir"])
     if not os.path.isdir(content_dir):
         sys.exit("找不到内容目录：%s" % content_dir)
 
     works, pages, home = {}, [], None
+    HOME_NAMES = ("首页.md", "index.md")
+    root_pages = []
     for dirpath, dirnames, filenames in os.walk(content_dir):
         dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
         for name in sorted(filenames):
@@ -307,9 +324,15 @@ def load_pages(root, cfg):
             rel = os.path.relpath(abs_path, content_dir).replace(os.sep, "/")
             page = Page(abs_path, rel)
             page.mtime = os.path.getmtime(abs_path)
-            if page.is_home:
+            if page.work is None and name in HOME_NAMES:
+                if home is not None:
+                    sys.exit("content/ 下同时存在 %s 和 %s，请只留一个作为首页"
+                             % (home.rel, rel))
+                page.is_home = True
                 home = page
             else:
+                if page.work is None:
+                    root_pages.append(page)
                 pages.append(page)
 
     for dirpath, dirnames, filenames in os.walk(content_dir):
@@ -320,6 +343,8 @@ def load_pages(root, cfg):
                 works[wd] = Work(wd, json.load(f))
 
     for p in pages:
+        if p.work is None:
+            continue                      # 顶层页面不属于任何作品
         w = works.setdefault(p.work, Work(p.work, {}))
         w.pages.append(p)
         if p.category:
@@ -335,6 +360,9 @@ def load_pages(root, cfg):
 
     if home is None:
         sys.exit("content/ 下缺少首页文件（content/首页.md）")
+    if root_pages and verbose:
+        print("提示：content/ 顶层另有 %d 个页面，会生成到站点根目录：%s"
+              % (len(root_pages), "、".join(p.name for p in root_pages)))
     return works, pages, home
 
 
@@ -377,7 +405,7 @@ def render_body(p, body, resolver, cfg):
     html = r.render(body)
     if not body.strip():
         html = ('<div class="stub-notice">这个页面还没有内容。在编辑器的「新建 / 编辑页面」里打开 '
-                '<b>%s.md</b> 就能开始写设定了。</div>' % _html.escape(p.rel))
+                '<b>%s</b> 就能开始写设定了。</div>' % _html.escape(p.rel))
     html, folded = wrap_spoilers(html, r.headings)
     p.body_html = html
     p.headings = r.headings
@@ -455,13 +483,15 @@ def work_accent_css(w):
 def catlinks_for(page, cfg, works, prefix=""):
     links = []
     w = works.get(page.work)
+    if page.work is None and not page.is_home:
+        links.append(("总览", prefix + "index.html"))
     if w:
         links.append((w.title, prefix + w.url))
         cat = w.categories.get(page.category)
         if cat:
             links.append((cat.title, prefix + cat.url))
     for tag in page.tags:
-        links.append((tag, prefix + "tags/%s.html" % quote(tag, safe="")))
+        links.append((tag, prefix + "tags/%s.html" % quote(tag_filename(tag), safe="")))
     return P.catlinks_html(links)
 
 
@@ -480,7 +510,7 @@ def backlinks_box(page, backlinks, base_dir):
 
 def build(root, cfg, quiet=False):
     out_dir = os.path.join(root, cfg["output_dir"])
-    works, pages, home = load_pages(root, cfg)
+    works, pages, home = load_pages(root, cfg, verbose=not quiet)
 
     home_body = load_page_source(home)
     all_pages = pages + [home]
@@ -633,7 +663,9 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
 
     for tag, items in tags.items():
         site.sidebar_boxes = make_sidebar(cfg, works, "", None, backlinks, total)
-        out_path = "tags/%s.html" % quote(tag, safe="")
+        # 磁盘上用未编码的名字（和普通页面一样），href 里才做百分号编码。
+        # 之前这里把 quote() 之后的结果直接当文件名写盘，链接被 HTTP 层解码成中文名后必然 404。
+        out_path = "tags/%s.html" % tag_filename(tag)
         rows = "".join(
             '<div class="recent-row"><span class="who">%s</span><span style="flex:1 1 auto">'
             '<a href="%s">%s</a></span></div>'
@@ -648,7 +680,8 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
 
     site.sidebar_boxes = make_sidebar(cfg, works, "", None, backlinks, total)
     body = "".join('<a class="chip" href="%s.html">%s <span style="color:#7b8794">%d</span></a>'
-                   % (quote(t, safe=""), _html.escape(t), len(v)) for t, v in sorted(tags.items()))
+                   % (quote(tag_filename(t), safe=""), _html.escape(t), len(v))
+                   for t, v in sorted(tags.items()))
     emit("tags/index.html", P.render_layout(
         site, title="标签总览 - %s" % site.name, body='<p>%s</p>' % body,
         rel=prefix_for("tags/index.html"), current_page=None, nav_active="",
@@ -711,8 +744,12 @@ def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sideba
         groups.append('<div class="cat-block"><h3><a href="%s">%s</a>（%d）</h3>'
                       '<div class="pagelist">%s</div></div>'
                       % (rel_to("", w.out_path), _html.escape(w.title), len(w.pages), items))
+    root_items = ['<a href="index.html">%s</a>' % _html.escape(home.title)]
+    root_items += ['<a href="%s">%s</a>' % (rel_to("", p.out_path), _html.escape(p.title))
+                   for p in sorted((x for x in all_pages if x.is_global and not x.is_home),
+                                   key=lambda x: x.name)]
     head = ('<div class="cat-block"><h3>总览</h3><div class="pagelist">%s</div></div>'
-            % ('<a href="index.html">%s</a>' % _html.escape(home.title)))
+            % "".join(root_items))
     emit("all.html", P.render_layout(
         site, title="所有页面 - %s" % site.name, body=head + "".join(groups), rel="",
         current_page=None, nav_active="all",

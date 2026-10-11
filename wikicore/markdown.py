@@ -146,7 +146,7 @@ class Renderer:
         text = re.sub(r"==([^=\n]+)==", r"<mark>\1</mark>", text)
         text = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", text)
         text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-        text = re.sub(r"(?<![\w*])\*([^*\n]+?)\*(?![\w*])", r"<em>\1</em>", text)
+        text = re.sub(r"(?<![A-Za-z0-9_*])\*([^*\n]+?)\*(?![A-Za-z0-9_*])", r"<em>\1</em>", text)
         text = re.sub(r"~~(.+?)~~", r"<del>\1</del>", text)
         text = re.sub(r"\[([^\]\n]+)\]\(([^)\s]+)\)", self._mdlink, text)
         text = re.sub(r"(?<![\"'>=/])(https?://[^\s<>\"'）】]+)",
@@ -229,7 +229,7 @@ class Renderer:
                 anchor = slugify_anchor(text_h, self._anchor)
                 plain = re.sub(r"[*`\[\]]|!\[\[|\]\]", "", text_h)
                 self.headings.append({"level": level, "anchor": anchor, "text": plain,
-                                      "spoiler": self._is_spoiler(text_h)})
+                                      "spoiler": self._is_spoiler(text_h), "nested": False})
                 out.append('<h%d id="%s">%s<span class="anchor">'
                            '<a href="#%s" title="锚点">¶</a></span></h%d>'
                            % (level, anchor, self.inline(text_h), anchor, level))
@@ -272,6 +272,18 @@ class Renderer:
             out.append("<p>" + sep.join(self.inline(b) for b in buf) + "</p>")
         return "\n".join(out)
 
+    def _nested_blocks(self, lines):
+        """渲染嵌套块（callout / 信息框 / 引用块内部），并把这些块里的标题标记为 nested。
+
+        嵌套标题不参与目录，也不参与剧透折叠。否则 wrap_spoilers 会按字符偏移
+        从 <div class="callout-body"> 中间切一刀，产出结构错乱的 HTML。
+        """
+        start = len(self.headings)
+        html = self._blocks(lines)
+        for h in self.headings[start:]:
+            h["nested"] = True
+        return html
+
     def _starts_block(self, line):
         if HEADING_RE.match(line) or HR_RE.match(line):
             return True
@@ -284,8 +296,6 @@ class Renderer:
     def _consume(self, lines, i, pred):
         block = []
         n = len(lines)
-        while i < n and (lines[i].strip() == "" and block and pred(lines[i - 1]) is False):
-            break
         while i < n:
             if not pred(lines[i]):
                 break
@@ -375,7 +385,7 @@ class Renderer:
                 return self._infobox(title, body)
             return self._callout(kind, title, body, collapsed)
         body = "\n".join(inner)
-        return '<blockquote>%s</blockquote>' % self._blocks(body.split("\n"))
+        return '<blockquote>%s</blockquote>' % self._nested_blocks(body.split("\n"))
 
     @staticmethod
     def _looks_like_infobox(body):
@@ -397,7 +407,7 @@ class Renderer:
     def _callout(self, kind, title, body, collapsed):
         label, cls = CALLOUT_STYLES.get(kind, (kind, "c-note"))
         head = title or label
-        inner_html = self._blocks(body)
+        inner_html = self._nested_blocks(body)
         if collapsed:
             return ('<details class="callout %s"><summary><span class="callout-label">%s</span> %s'
                     '</summary><div class="callout-body">%s</div></details>'
@@ -446,7 +456,7 @@ class Renderer:
                 parts.append("<tr><th>%s</th><td>%s</td></tr>" % (_html.escape(k), v))
             parts.append("</table>")
         if extra:
-            parts.append('<div class="infobox-extra">%s</div>' % self._blocks(extra))
+            parts.append('<div class="infobox-extra">%s</div>' % self._nested_blocks(extra))
         parts.append("</aside>")
         return "\n".join(parts)
 
@@ -472,31 +482,48 @@ class Renderer:
         return "".join(out)
 
     def _list(self, block):
-        out = []
-        stack = []
+        """列表渲染：按缩进建树，缩进续行并入上一个列表项。
+
+        注意：旧实现用 `out[-1].endswith("</li>")` 判断续行，而循环末尾总会 append
+        `<li>…`，那个条件永远不成立 —— 结果是缩进续行被静默丢掉。
+        """
+        items = []                       # [[缩进, 是否有序, [文本行…]], …]
         for line in block:
             mu, mo = UL_RE.match(line), OL_RE.match(line)
-            if not mu and not mo:
-                if out and out[-1].endswith("</li>"):
-                    out.append(self.inline(line.strip()))
-                continue
-            indent = len((mu or mo).group(1).replace("\t", "    "))
-            ordered = mo is not None
-            content = self.inline((mo.group(3) if ordered else mu.group(2)))
-            level = indent // 2
-            while len(stack) > level + 1:
-                out.append("</li></%s>" % ("ol" if stack.pop() else "ul"))
-            if len(stack) == level + 1:
-                out.append("</li>")
-                if stack[-1] != ordered:
-                    out.append("</%s><%s>" % ("ol" if stack.pop() else "ul", "ol" if ordered else "ul"))
-                    stack.append(ordered)
-            else:
-                out.append("<%s>" % ("ol" if ordered else "ul"))
-                stack.append(ordered)
-            out.append("<li>%s" % content)
-        while stack:
-            out.append("</li></%s>" % ("ol" if stack.pop() else "ul"))
+            if mu or mo:
+                indent = len((mu or mo).group(1).replace("\t", "    "))
+                ordered = mo is not None
+                items.append([indent, ordered, [mo.group(3) if ordered else mu.group(2)]])
+            elif items:
+                items[-1][2].append(line.strip())      # 续行接到上一个列表项
+        if not items:
+            return ""
+
+        root = {"indent": -1, "ordered": None, "lines": [], "children": []}
+        stack = [root]
+        for indent, ordered, lines in items:
+            # 缩进不大于栈顶时回退到合适的父节点：2 空格和 4 空格都能作为一级子列表
+            while len(stack) > 1 and indent <= stack[-1]["indent"]:
+                stack.pop()
+            node = {"indent": indent, "ordered": ordered, "lines": lines, "children": []}
+            stack[-1]["children"].append(node)
+            stack.append(node)
+        return self._render_list(root["children"])
+
+    def _render_list(self, nodes):
+        out, i = [], 0
+        while i < len(nodes):
+            ordered = nodes[i]["ordered"]
+            group = []
+            while i < len(nodes) and nodes[i]["ordered"] == ordered:
+                group.append(nodes[i])
+                i += 1
+            tag = "ol" if ordered else "ul"
+            out.append("<%s>" % tag)
+            for n in group:
+                text = "<br>\n".join(self.inline(x) for x in n["lines"] if x.strip())
+                out.append("<li>%s%s</li>" % (text, self._render_list(n["children"])))
+            out.append("</%s>" % tag)
         return "".join(out)
 
     # ---------------------------------------------------------- 剧透折叠
@@ -513,7 +540,7 @@ def wrap_spoilers(body_html, headings, summary_fmt="\U0001F512 %s —— 含剧�
     返回 (新 html, 是否产生了折叠)。
     """
     marked = [(i, h) for i, h in enumerate(headings)
-              if h.get("spoiler") and h["level"] in (2, 3)]
+              if h.get("spoiler") and h["level"] in (2, 3) and not h.get("nested")]
     if not marked:
         return body_html, False
 
