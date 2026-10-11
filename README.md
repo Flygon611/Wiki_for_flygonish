@@ -131,19 +131,23 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 
 ### 图标素材与授权
 
-侧栏那几个像素图标来自 [pixelarticons](https://github.com/halfmage/pixelarticons)（**MIT**），
-放在 `assets/icons/`，同目录有 `README.txt` 记着出处。要换图标：把 SVG 丢进那个目录，
-再改 `build.py` 的 `make_sidebar()` 里各盒子挂的 `"icon": "xxx.svg"`。
+侧栏的图标来自 [Fugue Icons](https://p.yusukekamiyamane.com/)（**CC BY 3.0**，需署名），
+16×16 的 PNG，放在 `assets/icons/`，同目录有 `README.txt` 记着出处。
+要换图标：把 PNG 丢进那个目录，再改 `build.py` 的 `make_sidebar()` 里各盒子挂的 `"icon": "xxx.png"`。
 
-> 图标是**内联**进 HTML 的（不是 `<img>`），因为 SVG 用的是 `fill="currentColor"`，
-> 只有内联才能跟着主题配色变。文件里的 `width`/`height` 会被去掉，尺寸交给 CSS 的 `.pk` 控制。
+署名已经写在页脚（`wiki.config.json` 的 `icon_credit`），**用 CC BY 的素材必须保留它**。
+
+> 尺寸写在 `width`/`height` 属性上，**不要只靠 CSS**。只靠 CSS 的话，
+> 一旦样式表没加载或被浏览器缓存成旧版本，内联 SVG 就会撑满整个容器（这个坑踩过一次）。
+> `build.py` 会给 `theme.css` / `theme.js` 带上内容指纹（`?v=xxxx`），
+> 就是为了避免「HTML 更新了、样式还是旧的」这种半新半旧的页面。
 
 用别的图标库时留意授权，常见几种：
 
 | 库 | 授权 | 能不能打包进公开仓库 |
 | --- | --- | --- |
 | Kenney | CC0 | ✅ 可以，连署名都不用 |
-| pixelarticons | MIT | ✅ 可以，保留授权声明 |
+| pixelarticons | MIT | ✅ 可以，保留授权声明（本站前几版用它，后换成 Fugue） |
 | Fugue Icons | CC BY 3.0 | ✅ 可以，需要署名 |
 | ICOOON MONO | 免费商用、免署名 | ❌ **禁止再分发**，只能直接在页面里用 |
 | FamFamFam Silk | 原为 CC BY 2.5 | ⚠️ 官网已挂，现有镜像多数没写授权 |

@@ -445,7 +445,7 @@ def render_body(p, body, resolver, cfg):
     if not body.strip():
         html = ('<div class="stub-notice">%s这个页面还没有内容。在编辑器的「新建 / 编辑页面」里打开 '
                 '<b>%s</b> 就能开始写设定了。</div>'
-                % (P.icon("pencil.svg"), _html.escape(p.rel)))
+                % (P.icon("pencil.png", prefix_for(p.out_path), 15), _html.escape(p.rel)))
     html, folded = wrap_spoilers(html, r.headings)
     p.body_html = html
     p.headings = r.headings
@@ -471,7 +471,7 @@ def build_nav(cfg, works):
 
 
 def make_sidebar(cfg, works, nav_active, current_page, backlinks, total_pages):
-    boxes = [{"title": "导航", "icon": "compass.svg", "items": [
+    boxes = [{"title": "导航", "icon": "compass.png", "items": [
         ("首页", "index.html", "", nav_active == "home"),
         ("所有页面", "all.html", str(total_pages), nav_active == "all"),
         ("最近更新", "recent.html", "", nav_active == "recent"),
@@ -489,18 +489,18 @@ def make_sidebar(cfg, works, nav_active, current_page, backlinks, total_pages):
                           bool(current_page) and current_page.work == w.dirname))
             for child in sorted(cat.children, key=lambda c: c.name):
                 items.append(("　└ " + child.title, child.out_path, str(len(child.pages)), False))
-        boxes.append({"title": w.title, "icon": "book-open.svg", "href": w.out_path,
+        boxes.append({"title": w.title, "icon": "book-open.png", "href": w.out_path,
                       "items": items, "key": w.dirname})
     tools = []
     if current_page is not None:
         tools.append(("链入本页", "#backlinks", str(len(backlinks.get(current_page.rel, []))), False))
     tools += [("搜索", "search.html", "", False),
               ("全部图片", "special.html#media", "", False)]
-    boxes.append({"title": "工具", "icon": "settings-2.svg", "items": tools})
+    boxes.append({"title": "工具", "icon": "gear.png", "items": tools})
     about = _html.escape(cfg.get("about", "")).replace("\n", "<br>")
     if cfg.get("repo", {}).get("url"):
         about += '<br><a href="%s" target="_blank" rel="noopener">GitHub 仓库</a>' % cfg["repo"]["url"]
-    boxes.append({"title": "关于", "icon": "info-box.svg",
+    boxes.append({"title": "关于", "icon": "information.png",
                   "html": '<div class="box-body">%s</div>' % about})
     return boxes
 
@@ -554,6 +554,14 @@ def backlinks_box(page, backlinks, base_dir):
 
 def build(root, cfg, quiet=False):
     out_dir = os.path.join(root, cfg["output_dir"])
+    # 图标目录要在渲染正文之前就位（空页面的占位提示里会用到）
+    P.ICON_DIR = os.path.join(root, cfg["assets_dir"], "icons")
+    # 给 css/js 带上内容指纹：否则改了样式，用户浏览器还拿着旧的缓存，
+    # 就会出现「HTML 是新的、样式是旧的」这种半新半旧的页面（踩过一次）。
+    cfg["_asset_ver"] = hashlib.sha1(
+        (P.theme_css(cfg.get("theme", {})) + P.THEME_JS + P.SEARCH_JS + P.RANDOM_JS +
+         json.dumps(cfg.get("buttons", []), ensure_ascii=False)).encode("utf-8")
+    ).hexdigest()[:8]
     works, pages, home = load_pages(root, cfg, verbose=not quiet)
 
     home_body = load_page_source(home)
@@ -599,7 +607,6 @@ def build(root, cfg, quiet=False):
     stats = "共 %d 个页面 · %d 张图片 · 生成于 %s" % (
         len(all_pages), total_images, time.strftime("%Y-%m-%d %H:%M"))
 
-    P.ICON_DIR = os.path.join(root, cfg["assets_dir"], "icons")
     site = P.Site(cfg, nav, [])
 
     if os.path.isdir(out_dir):
@@ -858,7 +865,7 @@ def write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sideba
              '填入这个名字就能创建它。</div>";}})();</script>')
     emit("missing.html", P.render_layout(
         site, title="未完成的页面 - %s" % site.name,
-        body=(P.icon("warning-diamond.svg", "pk pk-lg") +
+        body=(P.icon("exclamation.png", "", 18, "pk pk-lg") +
               '<p class="hit-count">下面这些页面被别的条目引用了，但还没有内容，正文里显示为'
               '<span style="color:#ba0000">红色链接</span>。</p><div id="missing-note"></div>%s'
               % ("".join(rows) or "<p>很好，没有悬空的链接。</p>")),

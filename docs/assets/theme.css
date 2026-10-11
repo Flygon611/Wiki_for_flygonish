@@ -79,11 +79,9 @@ img{max-width:100%}
 .box .box-body{padding:8px 9px; font-size:12px; color:#333}
 .box .sub{padding:4px 9px 2px 9px; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.5px}
 /* 内联像素图标（来自 assets/icons/） */
-.pk{width:14px; height:14px; flex:0 0 auto; vertical-align:-2px; margin-right:5px; fill:currentColor}
-.box-title .pk{color:var(--accent)}
-.sidebar .work-title .pk{color:var(--accent)}
-.stub-notice .pk{color:#b8860b; width:15px; height:15px; vertical-align:-3px}
-.pk.pk-lg{width:20px; height:20px; color:#b8860b; vertical-align:-5px}
+/* 尺寸由 width/height 属性决定，这里只管对齐、间距与透明感 */
+.pk{flex:0 0 auto; vertical-align:-3px; margin-right:5px; border:0; opacity:.88}
+.pk.pk-lg{vertical-align:-4px; margin-right:6px; opacity:1}
 .sidebar .work-block{border-top:1px solid var(--border-soft)}
 .sidebar .work-title{display:block; padding:6px 9px; font-weight:700; font-size:12.5px; color:var(--accent-2)}
 .sidebar .work-title:hover{text-decoration:none; background:#eef4fa}
@@ -231,6 +229,7 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .sbtn{display:inline-block; line-height:0; text-decoration:none}
 .sbtn img{display:block; border:0; image-rendering:pixelated}
 .sbtn:hover img{outline:1px solid var(--accent); outline-offset:1px}
+.site-footer .credit{margin-top:4px; font-size:11px; color:#8a949e}
 .site-footer .fbrand{color:var(--accent-2); font-weight:700}
 .site-footer .fnav{margin-bottom:6px}
 .site-footer .fnav a{margin:0 7px}

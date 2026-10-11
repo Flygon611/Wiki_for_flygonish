@@ -11,29 +11,36 @@ ICON_DIR = None
 _icon_cache = {}
 
 
-def icon(name, cls="pk"):
-    """内联一个 SVG 图标。
+def icon(name, base="", size=16, cls="pk"):
+    """站内小图标。
 
-    必须内联而不是 <img>，否则 SVG 里的 fill="currentColor" 拿不到外部颜色。
-    文件不存在就返回空串，页面上不会出现破图。
+    PNG 用 <img>，SVG 走内联（SVG 里是 fill="currentColor"，用 <img> 就丢了颜色）。
+
+    尺寸一定写在 width/height 属性上，不能只靠 CSS：之前只靠 CSS，
+    结果用户浏览器缓存了旧的样式表、HTML 却是新的，内联 SVG 没有宽高就撑满了整个侧栏。
     """
-    if not name or not ICON_DIR:
+    if not name:
         return ""
-    key = (name, cls)
-    if key in _icon_cache:
-        return _icon_cache[key]
-    path = os.path.join(ICON_DIR, name)
-    svg = ""
-    if os.path.isfile(path):
-        try:
-            with open(path, encoding="utf-8") as f:
-                svg = f.read().strip()
-            svg = svg.replace("<svg ", '<svg class="%s" ' % cls, 1)
-            svg = re.sub(r'\s(?:width|height)="[^"]*"', "", svg)
-        except OSError:
-            svg = ""
-    _icon_cache[key] = svg
-    return svg
+    if os.path.splitext(name)[1].lower() == ".svg":
+        key = ("svg", name, cls, size)
+        if key in _icon_cache:
+            return _icon_cache[key]
+        out = ""
+        path = os.path.join(ICON_DIR or "", name)
+        if ICON_DIR and os.path.isfile(path):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    out = f.read().strip()
+                out = out.replace("<svg ", '<svg class="%s" width="%d" height="%d" '
+                                         % (cls, size, size), 1)
+                out = re.sub(r'\s(?:width|height)="[^"]*"', "", out)
+            except OSError:
+                out = ""
+        _icon_cache[key] = out
+        return out
+    return ('<img class="%s" src="%sassets/icons/%s" width="%d" height="%d" alt="">'
+            % (cls, base, _html.escape(name, quote=True), size, size))
+
 
 FAVICON = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
@@ -125,11 +132,9 @@ img{max-width:100%}
 .box .box-body{padding:8px 9px; font-size:12px; color:#333}
 .box .sub{padding:4px 9px 2px 9px; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.5px}
 /* 内联像素图标（来自 assets/icons/） */
-.pk{width:14px; height:14px; flex:0 0 auto; vertical-align:-2px; margin-right:5px; fill:currentColor}
-.box-title .pk{color:var(--accent)}
-.sidebar .work-title .pk{color:var(--accent)}
-.stub-notice .pk{color:#b8860b; width:15px; height:15px; vertical-align:-3px}
-.pk.pk-lg{width:20px; height:20px; color:#b8860b; vertical-align:-5px}
+/* 尺寸由 width/height 属性决定，这里只管对齐、间距与透明感 */
+.pk{flex:0 0 auto; vertical-align:-3px; margin-right:5px; border:0; opacity:.88}
+.pk.pk-lg{vertical-align:-4px; margin-right:6px; opacity:1}
 .sidebar .work-block{border-top:1px solid var(--border-soft)}
 .sidebar .work-title{display:block; padding:6px 9px; font-weight:700; font-size:12.5px; color:var(--accent-2)}
 .sidebar .work-title:hover{text-decoration:none; background:#eef4fa}
@@ -277,6 +282,7 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .sbtn{display:inline-block; line-height:0; text-decoration:none}
 .sbtn img{display:block; border:0; image-rendering:pixelated}
 .sbtn:hover img{outline:1px solid var(--accent); outline-offset:1px}
+.site-footer .credit{margin-top:4px; font-size:11px; color:#8a949e}
 .site-footer .fbrand{color:var(--accent-2); font-weight:700}
 .site-footer .fnav{margin-bottom:6px}
 .site-footer .fnav a{margin:0 7px}
@@ -522,7 +528,7 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         cls = "box on" if box.get("key") and box["key"] == sidebar_active else "box"
         sb.append('<div class="%s">' % cls)
         if box.get("title"):
-            ic = icon(box.get("icon"))
+            ic = icon(box.get("icon"), base)
             if box.get("href"):
                 sb.append('<a class="work-title" href="%s%s">%s%s</a>'
                           % (base, esc(box["href"]), ic, esc(box["title"])))
@@ -589,7 +595,7 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
 <meta name="generator" content="nijiboshi-wiki builder">
 <link rel="icon" href="%(base)sassets/%(icon)s">
 %(apple_icon_meta)s
-<link rel="stylesheet" href="%(base)sassets/theme.css">
+<link rel="stylesheet" href="%(base)sassets/theme.css?v=%(asset_ver)s">
 %(og_meta)s
 %(head_extra)s
 </head>
@@ -647,9 +653,10 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
     <a href="%(base)s小按钮.html">小按钮</a>
   </div>
   <div>%(footnote)s</div>
+  %(icon_credit)s
   <div style="margin-top:5px">%(stats)s</div>
 </footer>
-<script src="%(base)sassets/theme.js"></script>
+<script src="%(base)sassets/theme.js?v=%(asset_ver)s"></script>
 %(body_extra)s
 </body>
 </html>
@@ -676,6 +683,9 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         "apple_icon_meta": apple_meta,
         "og_meta": "\n".join(og),
         "buttons": buttons_html,
+        "asset_ver": esc(site.config.get("_asset_ver", "")),
+        "icon_credit": ('<div class="credit">%s</div>' % site.config["icon_credit"])
+                       if site.config.get("icon_credit") else "",
         "footnote": site.config.get("footer", ""),
         "stats": stats_line,
         "repolink": ('<a href="%s" target="_blank" rel="noopener">GitHub 仓库</a>' % esc(repo["url"]))

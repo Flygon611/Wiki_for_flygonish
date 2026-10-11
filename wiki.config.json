@@ -12,6 +12,7 @@
   "apple_icon": "apple-touch-icon.png",
   "og_image": "og-cover.png",
   "site_url": "https://flygon611.github.io/Wiki_for_flygonish",
+  "icon_credit": "图标素材：<a href=\"https://p.yusukekamiyamane.com/\" target=\"_blank\" rel=\"noopener\">Fugue Icons</a> (C) 2013 Yusuke Kamiyamane，<a href=\"http://creativecommons.org/licenses/by/3.0/\" target=\"_blank\" rel=\"noopener\">CC BY 3.0</a> 授权",
   "buttons": [
     { "img": "buttons/见远观星集.png", "alt": "见远观星集", "href": "index.html", "title": "本站首页" },
     { "img": "buttons/SINCE-2010.png", "alt": "Since 2010 手写 HTML", "title": "SINCE 2010 · 手写 HTML" },
