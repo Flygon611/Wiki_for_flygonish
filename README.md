@@ -168,11 +168,14 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 
 ### 图标素材与授权
 
-侧栏的图标来自 [Fugue Icons](https://p.yusukekamiyamane.com/)（**CC BY 3.0**，需署名），
-16×16 的 PNG，放在 `assets/icons/`，同目录有 `README.txt` 记着出处。
+侧栏的图标来自 **FamFamFam "Silk"** 图标集（Mark James，**CC BY 2.5**），
+16×16 的 PNG，放在 `assets/icons/`，同目录有 `README.txt` 记着出处和授权原文。
 要换图标：把 PNG 丢进那个目录，再改 `build.py` 的 `make_sidebar()` 里各盒子挂的 `"icon": "xxx.png"`。
 
-署名已经写在页脚（`wiki.config.json` 的 `icon_credit`），**用 CC BY 的素材必须保留它**。
+> **署名是硬性要求**：CC BY 2.5 的原文写着「All I ask is that you include a link back to
+> this page in your credits」，所以页脚（`wiki.config.json` 的 `icon_credit`）里链回了原页面。
+> 注意原站 `famfamfam.com` 目前打不开，图标实际取自[作者本人的仓库](https://github.com/markjames/famfamfam-silk-icons)，
+> 仓库里的 `readme.txt` 与授权说明一致。
 
 > 尺寸写在 `width`/`height` 属性上，**不要只靠 CSS**。只靠 CSS 的话，
 > 一旦样式表没加载或被浏览器缓存成旧版本，内联 SVG 就会撑满整个容器（这个坑踩过一次）。
@@ -183,11 +186,15 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 
 | 库 | 授权 | 能不能打包进公开仓库 |
 | --- | --- | --- |
+| FamFamFam Silk | CC BY 2.5 | ✅ 可以，**需署名并链回原页面**（本站正在用） |
+| Fugue Icons | CC BY 3.0 | ✅ 可以，需署名 |
 | Kenney | CC0 | ✅ 可以，连署名都不用 |
-| pixelarticons | MIT | ✅ 可以，保留授权声明（本站前几版用它，后换成 Fugue） |
-| Fugue Icons | CC BY 3.0 | ✅ 可以，需要署名 |
+| pixelarticons | MIT | ✅ 可以，保留授权声明 |
 | ICOOON MONO | 免费商用、免署名 | ❌ **禁止再分发**，只能直接在页面里用 |
-| FamFamFam Silk | 原为 CC BY 2.5 | ⚠️ 官网已挂，现有镜像多数没写授权 |
+
+> 判断能不能用的关键不是「官网还在不在」，而是**授权本身**。
+> FamFamFam 的官网虽然下线了，但 CC BY 2.5 的授权条文明明白白写在作者仓库的 `readme.txt` 里，
+> 只要按它说的署名并链回原页面，就可以放心用。
 
 站上的[小按钮与素材](content/小按钮.md)那一页有更完整的清单。
 

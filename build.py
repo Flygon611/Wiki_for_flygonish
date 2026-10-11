@@ -489,7 +489,7 @@ def build_nav(cfg, works):
 
 
 def make_sidebar(cfg, works, nav_active, current_page, backlinks, total_pages):
-    boxes = [{"title": "导航", "icon": "compass.png", "items": [
+    boxes = [{"title": "导航", "icon": "sitemap.png", "items": [
         ("首页", "index.html", "", nav_active == "home"),
         ("所有页面", "all.html", str(total_pages), nav_active == "all"),
         ("最近更新", "recent.html", "", nav_active == "recent"),
@@ -507,14 +507,14 @@ def make_sidebar(cfg, works, nav_active, current_page, backlinks, total_pages):
                           bool(current_page) and current_page.work == w.dirname))
             for child in sorted(cat.children, key=lambda c: c.name):
                 items.append(("　└ " + child.title, child.out_path, str(len(child.pages)), False))
-        boxes.append({"title": w.title, "icon": "book-open.png", "href": w.out_path,
+        boxes.append({"title": w.title, "icon": "book_open.png", "href": w.out_path,
                       "items": items, "key": w.dirname})
     tools = []
     if current_page is not None:
         tools.append(("链入本页", "#backlinks", str(len(backlinks.get(current_page.rel, []))), False))
     tools += [("搜索", "search.html", "", False),
               ("全部图片", "special.html#media", "", False)]
-    boxes.append({"title": "工具", "icon": "gear.png", "items": tools})
+    boxes.append({"title": "工具", "icon": "cog.png", "items": tools})
     about = _html.escape(cfg.get("about", "")).replace("\n", "<br>")
     if cfg.get("repo", {}).get("url"):
         about += '<br><a href="%s" target="_blank" rel="noopener">GitHub 仓库</a>' % cfg["repo"]["url"]
