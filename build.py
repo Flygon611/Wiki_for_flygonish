@@ -278,6 +278,8 @@ class Page:
         self.missing_links = set()
         self.warnings = []
         self.mtime = 0
+        # 加密页用它把输出路径换成哈希文件名（见 build.py 里密码门那一段）
+        self.out_path_override = None
 
     @property
     def is_global(self):
@@ -286,6 +288,8 @@ class Page:
 
     @property
     def out_path(self):
+        if self.out_path_override:
+            return self.out_path_override
         if self.is_home:
             return "index.html"
         if self.work is None:
@@ -673,6 +677,21 @@ def build(root, cfg, quiet=False):
     def is_gated(work_dirname):
         """这个作品（内容目录名）是否要用密码门加密。"""
         return gate is not None and gate.covers(work_dirname)
+
+    # 加密页的文件名本身就是条目名。docs/想要飞的始祖小鸟/人物/阿尔宙斯.html
+    # 这样的路径摆在公开仓库里，等于把「有哪些条目」直接列出来——正文加密了，
+    # 名单却泄了（连「阿尔宙斯是最终 boss」这种事都能从文件名看出来）。
+    # 所以加密作品一律改用哈希文件名，真名只存在于密文里。
+    # 目录结构与相对深度都不变，所以侧栏、导航盒、分类列表、门户卡片里
+    # 生成的链接会自动跟着走，不需要逐处打补丁。
+    # 哈希取自内容路径（p.rel），因此每次构建结果稳定，链接不会变来变去。
+    if gate is not None:
+        for p in pages:
+            if not is_gated(p.work):
+                continue
+            digest = hashlib.sha1(p.rel.encode("utf-8")).hexdigest()[:12]
+            cat = (p.category + "/") if p.category else ""
+            p.out_path_override = "%s/%s%s.html" % (p.work, cat, digest)
 
     warn = 0
     for p in pages:
