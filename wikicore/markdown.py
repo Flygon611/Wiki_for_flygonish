@@ -555,6 +555,10 @@ def wrap_spoilers(body_html, headings, summary_fmt="\U0001F512 %s —— 含剧�
             continue
         end = len(body_html)
         for j in range(i + 1, len(headings)):
+            # 嵌套在 callout / 信息框 / 引用块里的标题不能用来「结束」外层折叠区：
+            # 它位于容器内部，拿它的位置当终点会让 <details> 在容器里闭合，产出错乱 HTML。
+            if headings[j].get("nested"):
+                continue
             if headings[j]["level"] <= h["level"] and pos.get(j, -1) > start:
                 end = pos[j]
                 break

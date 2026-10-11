@@ -118,6 +118,28 @@ def work_segment(work, label="作品目录名"):
     return w
 
 
+def sniff_image(blob, ext):
+    """按文件头确认内容真的是图片。
+
+    只校验「声明的 MIME 与扩展名一致」是不够的：可以让一份 HTML/JS 声明成 image/png
+    存成 assets/x.png，再被 /media/x.png 同源直出。这里补上魔数检查做纵深防御。
+    """
+    head = blob[:16]
+    if ext == ".png":
+        return head.startswith(b"\x89PNG\r\n\x1a\n")
+    if ext in (".jpg", ".jpeg"):
+        return head.startswith(b"\xff\xd8\xff")
+    if ext == ".gif":
+        return head[:6] in (b"GIF87a", b"GIF89a")
+    if ext == ".bmp":
+        return head.startswith(b"BM")
+    if ext == ".webp":
+        return head[:4] == b"RIFF" and blob[8:12] == b"WEBP"
+    if ext == ".avif":
+        return b"ftyp" in blob[4:16]
+    return False
+
+
 def _within(path, base):
     """path 是否在 base 之内（用 os.sep 收尾，避免 docs 与 docs_backup 被当成同一个）。"""
     path = os.path.normpath(path)
@@ -521,6 +543,8 @@ class Handler(BaseHTTPRequestHandler):
         blob = base64.b64decode(m.group(2))
         if len(blob) > 25 * 1024 * 1024:
             raise ValueError("图片超过 25MB")
+        if not sniff_image(blob, ext):
+            raise ValueError("文件内容不像是 %s 图片（魔数不匹配）" % ext)
         dest_dir = os.path.join(ASSETS, work) if work else ASSETS
         os.makedirs(dest_dir, exist_ok=True)
         dest = os.path.join(dest_dir, name)
@@ -601,6 +625,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(body)
 

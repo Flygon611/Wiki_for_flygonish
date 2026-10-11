@@ -16,6 +16,7 @@
 
 import argparse
 import datetime
+import hashlib
 import html as _html
 import json
 import os
@@ -66,13 +67,40 @@ def rel_to(base_dir, out_path):
 
 
 def tag_filename(tag):
-    """标签 → 文件名 / URL 片段。
-
-    落盘名字和 href 里解码后的名字必须是同一份字符串，否则会 404。
-    这里先把文件系统不安全的字符换掉，href 再对它做百分号编码。
-    """
+    """标签 → 文件名片段（落盘与 href 解码后的名字必须是同一份字符串）。"""
     s = re.sub(r'[\\/:*?"<>|\x00-\x1f]', "_", str(tag)).strip().strip(".")
     return s or "_"
+
+
+def build_tag_map(all_tags):
+    """标签 → 文件名。返回 (mapping, collisions)。
+
+    归一化会把不同标签映射到同一个名字（`a/b`、`a_b`、`a:b` 都是 `a_b`），
+    而 `index` 是标签总览页的保留名，超长名字还会撞文件名长度上限。
+    这些都会让标签页互相覆盖且不自检报错，所以在这里统一加上短哈希让开。
+    """
+    mapping, taken, collisions = {}, {}, []
+    for tag in sorted({str(t) for t in all_tags}):
+        base = tag_filename(tag)
+        if len(base) > 60:                      # 文件系统单段上限 255 字节，中文一个字 3 字节
+            base = base[:60].rstrip(".")
+        cand = base
+        need = cand.lower() == "index" or cand.lower() in taken
+        if need:
+            h = hashlib.sha1(tag.encode("utf-8")).hexdigest()[:6]
+            cand = "%s-%s" % (base[:50], h)
+            while cand.lower() in taken:
+                cand += "x"
+            collisions.append((tag, base, cand))
+        taken[cand.lower()] = tag
+        mapping[tag] = cand
+    return mapping, collisions
+
+
+# 站点自带页面的输出名，顶层页面不能和它们抢
+RESERVED_ROOT = {"index.html", "all.html", "recent.html", "missing.html",
+                 "special.html", "search.html", "random.html", "404.html"}
+RESERVED_DIRS = {"tags", "assets"}
 
 
 def prefix_for(out_path):
@@ -360,6 +388,16 @@ def load_pages(root, cfg, verbose=False):
 
     if home is None:
         sys.exit("content/ 下缺少首页文件（content/首页.md）")
+    # 顶层页面会生成到站点根目录，撞上站点自带页面就会被静默覆盖
+    for p in root_pages:
+        name = os.path.basename(p.out_path)
+        if name.lower() in RESERVED_ROOT:
+            sys.exit("content/%s 会生成成 %s，和站点自带的页面撞名（会被覆盖），请改个名字。"
+                     % (p.rel, p.out_path))
+    for wd in works:
+        if wd.lower() in RESERVED_DIRS:
+            sys.exit("作品目录名 %r 与站点自带目录（%s）冲突，请改名。"
+                     % (wd, "、".join(sorted(RESERVED_DIRS))))
     if root_pages and verbose:
         print("提示：content/ 顶层另有 %d 个页面，会生成到站点根目录：%s"
               % (len(root_pages), "、".join(p.name for p in root_pages)))
@@ -480,7 +518,7 @@ def work_accent_css(w):
             % (w.accent, shade(w.accent, 0.68), shade(w.accent, 1.45)))
 
 
-def catlinks_for(page, cfg, works, prefix=""):
+def catlinks_for(page, cfg, works, prefix="", tag_map=None):
     links = []
     w = works.get(page.work)
     if page.work is None and not page.is_home:
@@ -490,8 +528,10 @@ def catlinks_for(page, cfg, works, prefix=""):
         cat = w.categories.get(page.category)
         if cat:
             links.append((cat.title, prefix + cat.url))
+    tag_map = tag_map or {}
     for tag in page.tags:
-        links.append((tag, prefix + "tags/%s.html" % quote(tag_filename(tag), safe="")))
+        name = tag_map.get(tag) or tag_filename(tag)
+        links.append((tag, prefix + "tags/%s.html" % quote(name, safe="")))
     return P.catlinks_html(links)
 
 
@@ -543,6 +583,13 @@ def build(root, cfg, quiet=False):
             if pick.rel != p.rel:
                 backlinks[pick.rel].append(p)
 
+    # 标签 → 文件名，在这里定一次，供分类条和标签页共用（避免两边算出不同的名字）
+    tag_map, tag_collisions = build_tag_map([t for x in all_pages for t in x.tags])
+    if tag_collisions:
+        log("提示：以下标签归一化后重名，已自动加后缀区分：", quiet)
+        for tag, base, fixed in tag_collisions:
+            log("    %s（%s）→ %s" % (tag, base, fixed), quiet)
+
     nav = build_nav(cfg, works)
     total_images = sum(len(v) for v in images.values())
     stats = "共 %d 个页面 · %d 张图片 · 生成于 %s" % (
@@ -577,7 +624,8 @@ def build(root, cfg, quiet=False):
                 _html.escape(page.title),
                 [w.title for w in works.values() if w.dirname == page.work] if page and page.work else None),
             catlinks=catlinks if catlinks is not None else (
-                catlinks_for(page, cfg, works, prefix_for(page.out_path)) if page else ""),
+                catlinks_for(page, cfg, works, prefix_for(page.out_path), tag_map)
+                if page else ""),
             backlinks=blinks if blinks is not None else (backlinks_box(page, backlinks, base_dir) if page else ""),
             nav_active=nav_active,
             sidebar_active=(page.work or "") if page else "",
@@ -641,14 +689,16 @@ def build(root, cfg, quiet=False):
 
     write_list_pages(root, cfg, works, pages, home, all_pages, site, make_sidebar,
                      backlinks, stats, out_dir)
-    write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats, out_dir)
+    write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
+                    out_dir, tag_map)
     write_assets(root, cfg, out_dir)
     write_search_index(cfg, works, all_pages, out_dir)
     report(root, cfg, works, pages, all_pages, by_name, images, backlinks, warn, quiet)
     return len(all_pages)
 
 
-def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats, out_dir):
+def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
+                    out_dir, tag_map=None):
     """frontmatter 里写了「标签: [a, b]」的页面，会生成 tags/<标签>.html 供分类条链接。"""
     tags = {}
     for p in all_pages:
@@ -656,6 +706,17 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
             tags.setdefault(tag, []).append(p)
     if not tags:
         return
+    tag_map = tag_map or build_tag_map(list(tags))[0]
+    # 构建期断言：每个标签必须有自己的、不占用保留名的页面。
+    # 归一化碰撞曾让多个标签共用一个文件，而 check_site.py 只查文件是否存在，测不出来。
+    seen = {}
+    for tag in tags:
+        name = tag_map.get(tag) or tag_filename(tag)
+        if name.lower() == "index":
+            sys.exit("标签 %r 的文件名占用了 tags/index.html（标签总览页）" % tag)
+        if name.lower() in seen:
+            sys.exit("标签 %r 与 %r 的文件名撞车（都是 %s）" % (tag, seen[name.lower()], name))
+        seen[name.lower()] = tag
     total = len(all_pages)
 
     def emit(out_path, html):
@@ -665,7 +726,7 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
         site.sidebar_boxes = make_sidebar(cfg, works, "", None, backlinks, total)
         # 磁盘上用未编码的名字（和普通页面一样），href 里才做百分号编码。
         # 之前这里把 quote() 之后的结果直接当文件名写盘，链接被 HTTP 层解码成中文名后必然 404。
-        out_path = "tags/%s.html" % tag_filename(tag)
+        out_path = "tags/%s.html" % (tag_map.get(tag) or tag_filename(tag))
         rows = "".join(
             '<div class="recent-row"><span class="who">%s</span><span style="flex:1 1 auto">'
             '<a href="%s">%s</a></span></div>'
@@ -680,7 +741,7 @@ def write_tag_pages(cfg, works, all_pages, site, make_sidebar, backlinks, stats,
 
     site.sidebar_boxes = make_sidebar(cfg, works, "", None, backlinks, total)
     body = "".join('<a class="chip" href="%s.html">%s <span style="color:#7b8794">%d</span></a>'
-                   % (quote(tag_filename(t), safe=""), _html.escape(t), len(v))
+                   % (quote(tag_map.get(t) or tag_filename(t), safe=""), _html.escape(t), len(v))
                    for t, v in sorted(tags.items()))
     emit("tags/index.html", P.render_layout(
         site, title="标签总览 - %s" % site.name, body='<p>%s</p>' % body,
