@@ -3,9 +3,9 @@
 """密码门独立验证：把 docs/ 里的密文解回来，确认加密是对的、明文没漏。
 
 用法：
-    WIKI_GATE_PASSWORD=test123 python3 tools/verify_gate.py
-    WIKI_GATE_PASSWORD=test123 python3 tools/verify_gate.py --dump /tmp/解密出来的
-    WIKI_GATE_PASSWORD=test123 python3 tools/verify_gate.py --expect 阿尔宙斯 --expect 符利根
+    WIKI_GATE_PASSWORD=你的密码 python3 tools/verify_gate.py
+    WIKI_GATE_PASSWORD=你的密码 python3 tools/verify_gate.py --dump /tmp/解密出来的
+    WIKI_GATE_PASSWORD=你的密码 python3 tools/verify_gate.py --expect 阿尔宙斯 --expect 符利根
 
 它做四件事：
   1. AES 内核的已知答案自检（FIPS-197 的三组向量）——避免「自己跟自己对答案」；

@@ -105,6 +105,7 @@
     content.innerHTML = o.h;
     content.hidden = false;
     if (box) box.style.display = "none";
+    say("");      // 把「正在解密…」清掉，免得下次失败时还留着上一轮的字
     if (o.d) { try { document.title = o.d; } catch (e) { /* 忽略 */ } }
     if (o.p) {
       var h1 = document.querySelector("h1.page-title");
