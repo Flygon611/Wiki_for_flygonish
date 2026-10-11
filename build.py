@@ -376,6 +376,8 @@ def load_pages(root, cfg, verbose=False):
             continue                      # 顶层页面不属于任何作品
         w = works.setdefault(p.work, Work(p.work, {}))
         w.pages.append(p)
+        # 作品的 spoiler_all：整部作品的页面一律挂剧透横幅（未公开作品用）
+        p.spoiler_all = bool(w.meta.get("spoiler_all"))
         if p.category:
             w.categories.setdefault(p.category, Category(w, p.category)).pages.append(p)
 
@@ -467,7 +469,7 @@ def render_body(p, body, resolver, cfg):
     html, folded = wrap_spoilers(html, r.headings)
     p.body_html = html
     p.headings = r.headings
-    p.has_spoiler = folded or bool(p.spoiler_flag)
+    p.has_spoiler = folded or bool(p.spoiler_flag) or bool(getattr(p, "spoiler_all", False))
     p.links_out = r.links_out
     p.missing_links = r.missing_links
     p.warnings = r.warnings
