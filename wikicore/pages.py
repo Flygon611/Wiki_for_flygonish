@@ -123,6 +123,12 @@ h1.page-title{margin:0 0 2px; font-size:25px; line-height:1.3; font-weight:700;
 .article blockquote{margin:10px 0; padding:6px 12px; border-left:4px solid var(--border); background:#f7fafc; color:#333}
 .article code{background:#f2f5f7; border:1px solid var(--border-soft); border-radius:2px; padding:0 4px;
   font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px}
+/* 围栏代码块 ``` */
+.article pre.codeblock{background:#1f2731; color:#d8e4ef; border:1px solid #16202a; border-radius:3px;
+  padding:10px 13px; overflow:auto; margin:12px 0;
+  font:12px/1.7 "SF Mono",Menlo,Consolas,"PingFang SC",monospace}
+.article pre.codeblock code{background:transparent; border:0; padding:0; color:inherit; font-size:inherit;
+  font-family:inherit}
 .article mark{background:var(--mark); padding:0 2px}
 .anchor{opacity:0; margin-left:6px; font-size:12px}
 .anchor a{color:#9fb0be}
@@ -229,6 +235,11 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 
 /* ---------------------------------------------------- 页脚 */
 .site-footer{margin:22px auto 0; max-width:1260px; padding:14px 16px 30px; color:var(--muted); font-size:11.5px; text-align:center}
+/* 88x31 小按钮（2010 年代那一套站标） */
+.sbtn-row{display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin:0 0 14px}
+.sbtn{display:inline-block; line-height:0; text-decoration:none}
+.sbtn img{display:block; border:0; image-rendering:pixelated}
+.sbtn:hover img{outline:1px solid var(--accent); outline-offset:1px}
 .site-footer .fbrand{color:var(--accent-2); font-weight:700}
 .site-footer .fnav{margin-bottom:6px}
 .site-footer .fnav a{margin:0 7px}
@@ -493,6 +504,42 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
             sb.append("</ul>")
         sb.append("</div>")
 
+    # ---- 站点图标 / 社交缩略图 ----
+    icon = site.config.get("icon") or "favicon.svg"
+    apple = site.config.get("apple_icon") or ""
+    apple_meta = ('<link rel="apple-touch-icon" href="%sassets/%s">' % (base, esc(apple))
+                  if apple else "")
+    site_url = (site.config.get("site_url") or "").rstrip("/")
+    og_image = site.config.get("og_image") or ""
+    og = ['<meta property="og:type" content="website">',
+          '<meta property="og:site_name" content="%s">' % esc(site.name),
+          '<meta property="og:title" content="%s">' % esc(title),
+          '<meta property="og:description" content="%s">' % esc(description or site.tagline),
+          '<meta name="twitter:card" content="summary_large_image">']
+    if site_url and og_image:
+        og.append('<meta property="og:image" content="%s/assets/%s">' % (site_url, esc(og_image)))
+        og.append('<meta property="og:image:width" content="1200">')
+        og.append('<meta property="og:image:height" content="630">')
+    if site_url and current_page is not None:
+        og.append('<link rel="canonical" href="%s/%s">' % (site_url, current_page.out_path))
+
+    # ---- 页脚 88x31 小按钮 ----
+    btns = []
+    for b in site.config.get("buttons", []) or []:
+        img = '<img src="%sassets/%s" alt="%s" width="88" height="31">' % (
+            base, esc(b["img"]), esc(b.get("alt", "")))
+        href = b.get("href")
+        if href:
+            target = ' target="_blank" rel="noopener"' if b.get("ext") else ""
+            if not b.get("ext"):
+                href = base + href
+            btns.append('<a class="sbtn" href="%s"%s title="%s">%s</a>'
+                        % (esc(href), target, esc(b.get("title", b.get("alt", ""))), img))
+        else:
+            btns.append('<span class="sbtn" title="%s">%s</span>'
+                        % (esc(b.get("title", b.get("alt", ""))), img))
+    buttons_html = ('<div class="sbtn-row">%s</div>' % "".join(btns)) if btns else ""
+
     return """<!DOCTYPE html>
 <html lang="%(lang)s">
 <head>
@@ -501,8 +548,10 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
 <meta name="generator" content="nijiboshi-wiki builder">
-<link rel="icon" href="%(base)sassets/favicon.svg">
+<link rel="icon" href="%(base)sassets/%(icon)s">
+%(apple_icon_meta)s
 <link rel="stylesheet" href="%(base)sassets/theme.css">
+%(og_meta)s
 %(head_extra)s
 </head>
 <body>
@@ -548,13 +597,15 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
 </div>
 
 <footer class="site-footer">
+  %(buttons)s
   <div class="fnav">
     <a href="%(base)sindex.html">首页</a>·
     <a href="%(base)sall.html">所有页面</a>·
     <a href="%(base)srecent.html">最近更新</a>·
     <a href="%(base)ssearch.html">搜索</a>·
     <a href="%(base)sspecial.html">特殊页面</a>·
-    <a href="%(base)smissing.html">未完成的页面</a>
+    <a href="%(base)smissing.html">未完成的页面</a>·
+    <a href="%(base)s小按钮.html">小按钮</a>
   </div>
   <div>%(footnote)s</div>
   <div style="margin-top:5px">%(stats)s</div>
@@ -582,6 +633,10 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         "backlinks": backlinks,
         "head_extra": head_extra,
         "body_extra": top_extra,
+        "icon": esc(icon),
+        "apple_icon_meta": apple_meta,
+        "og_meta": "\n".join(og),
+        "buttons": buttons_html,
         "footnote": site.config.get("footer", ""),
         "stats": stats_line,
         "repolink": ('<a href="%s" target="_blank" rel="noopener">GitHub 仓库</a>' % esc(repo["url"]))

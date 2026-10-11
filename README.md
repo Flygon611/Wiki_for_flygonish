@@ -28,7 +28,8 @@ Fandom / Wikia 2010 年代风格的静态站点 + 一套本地可视化编辑器
 ├── tools/
 │   ├── import_obsidian.py       ← 从 Obsidian 库一次性导入
 │   ├── check_site.py            ← 站点链接自检
-│   └── check_editor.py          ← 编辑器路径安全检查
+│   ├── check_editor.py          ← 编辑器路径安全检查
+│   └── make_buttons.py          ← 生成 88×31 小按钮站标
 ├── wikicore/                    ← 渲染器与主题（build.py 的内部模块）
 ├── build.py                     ← 生成器：content/ → docs/
 └── wiki.config.json             ← 站点名、标语、配色、页脚、仓库地址
@@ -89,6 +90,12 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 | `about` | 左栏「关于」框的文字 |
 | `footer` | 页脚，支持 HTML（已经写好 CC 授权与版权行） |
 | `theme` | 站点主色。`accent` / `accent2` / `accent3` 是一组渐变 |
+| `logo` | 页头左上角的小图，放在 `assets/` 下（现在是 `logo.jpg`） |
+| `icon` | 浏览器标签页图标（现在是 `favicon.png`，取自博客的像素标） |
+| `apple_icon` | iOS 加到主屏幕时的图标（180×180） |
+| `og_image` | 分享链接时的缩略图，建议 1200×630（现在是 `og-cover.png`） |
+| `site_url` | 站点正式地址。`og:image` 和 `canonical` 需要绝对路径，靠它拼 |
+| `buttons` | 页脚那排 88×31 小按钮的清单（图片、说明、链接） |
 | `repo.url` | 仓库地址，决定条目右上角「编辑 / 历史」按钮指向哪 |
 | `spoiler.fold_headings` | 命中这些关键词的小节默认折叠（现在是第二季、第三季、番外等） |
 | `soft_breaks` | 单换行怎么处理：`br`（默认，按你笔记里的换行）/ `space`（合并成一段） |
@@ -122,6 +129,21 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 
 注意：首页只能有一个。同时存在 `content/首页.md` 和 `content/index.md` 时构建会直接报错。
 
+### 页脚的 88×31 小按钮
+
+`assets/buttons/` 里是那个年代的站标。要改文字或配色，编辑
+`tools/make_buttons.py` 顶部那张 `BUTTONS` 表，然后重跑：
+
+```bash
+python3 tools/make_buttons.py
+```
+
+生成的按钮要出现在页脚，就在 `wiki.config.json` 的 `buttons` 数组里加一条
+（`href` 写站内路径；外链加 `"ext": true`）。
+
+站上有一页 [小按钮与素材](content/小按钮.md)，写着交换链接的代码、
+素材来源和各自的授权情况，可以照抄给别人。
+
 ### 分类
 
 **分类就是子文件夹名。** `人物/上鹈.md` → 分类「人物」。
@@ -142,6 +164,7 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 | `> [!tip]` `[!warning]` `[!danger]` `[!quote]` … | 彩色提示框 |
 | `**粗体**` `*斜体*` `~~删除线~~` `==高亮==` `` `代码` `` | 行内样式 |
 | `## 标题` `### 标题` | 章节，自动生成目录和锚点 |
+| ` ```代码``` ` | 围栏代码块，内部原样显示、不做 Markdown 解析 |
 | `%%注释%%` | 会被丢掉（只写给自己看的内容） |
 | 原生 `<table>` `<div>` `<figure>` `<img src="x.jpg">` | 原样保留；`<img>` 也按文件名自动找图并改对路径 |
 
@@ -232,6 +255,8 @@ python3 tools/import_obsidian.py --write   # 真的导入（已存在的页面�
 - **不要直接双击 `docs/index.html` 看**：浏览器在 `file://` 下不允许网页读取 `search.json`，
   搜索会失效（页面会给出提示）。本地看请用 `python3 build.py --open`，或发布后用线上地址。
 - **删除页面**是移到 `content/.trash/`（该目录已被 git 忽略），不会真删；要恢复就手动移回来。
+- **分享缩略图要用绝对地址**：`og_image` 依赖 `wiki.config.json` 里的 `site_url`。
+  换域名（比如以后绑自定义域名）记得同步改它，否则链接卡片的图会指向老地址。
 - **`check_site.py` 还会检查标签配平**。如果你在正文里手写 `<div>`／`<table>` 之类的 HTML
   却忘了闭合，它会报出行号 —— 这是内容里的笔误，不是生成器的问题，按提示补上闭合标签即可。
 - **顶层页面不能和站点自带页面同名**：`content/all.md`、`search.md`、`404.html`、`index.md`

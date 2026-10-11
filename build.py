@@ -154,6 +154,7 @@ def plain_excerpt(body_html, limit=220):
     h = re.sub(r'<aside class="infobox">.*?</aside>', " ", body_html, flags=re.S)
     h = re.sub(r"<details.*?</details>", " ", h, flags=re.S)
     h = re.sub(r'<span class="anchor">.*?</span>', "", h, flags=re.S)
+    h = re.sub(r'<span class="callout-label">.*?</span>', "", h, flags=re.S)   # 别把「信息」这类标签混进摘要
     h = re.sub(r"<[^>]+>", " ", h)
     h = _html.unescape(h)
     h = re.sub(r"\s+", " ", h).strip()
@@ -649,7 +650,8 @@ def build(root, cfg, quiet=False):
         body=(P.toc_html(home.headings, home.has_spoiler) + "\n" + home.body_html),
         rel="", current_page=home, titleblock=home_tb, nav_active="home",
         catlinks="", backlinks="", banner=page_banner(home, cfg, works),
-        stats_line=stats, description=plain_excerpt(home.body_html, 150)))
+        stats_line=stats,
+        description="%s —— %s" % (site.tagline, cfg.get("about", ""))))
 
     # ---- 作品门户 ----
     for w in works.values():

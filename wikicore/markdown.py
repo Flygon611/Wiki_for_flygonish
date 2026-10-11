@@ -215,6 +215,22 @@ class Renderer:
                 i += 1
                 continue
 
+            # 围栏代码块 ``` ... ```（内部原样保留，不做行内处理）
+            fence = re.match(r"^\s*(```+|~~~+)\s*([\w+-]*)\s*$", line)
+            if fence:
+                marker, lang = fence.group(1)[0], fence.group(2)
+                j = i + 1
+                while j < n and not re.match(r"^\s*%s{3,}\s*$" % marker, lines[j]):
+                    j += 1
+                if j < n:                                # 有收尾围栏才算代码块
+                    body = lines[i + 1:j]
+                    i = j + 1
+                    cls = ' class="lang-%s"' % _html.escape(lang) if lang else ""
+                    out.append('<pre class="codeblock"><code%s>%s</code></pre>'
+                               % (cls, _html.escape("\n".join(body))))
+                    continue
+                # 没有收尾围栏：当普通段落处理，绝不吞掉后面的整篇文档
+
             html_block = self._try_html_block(lines, i)
             if html_block is not None:
                 frag, i = html_block
