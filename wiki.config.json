@@ -1,0 +1,39 @@
+{
+  "site_name": "见远观星集",
+  "site_tagline": "虹星的小说设定与角色资料库",
+  "about": "《青梅竹马失踪后变成电飞鼠这档事》与《想要飞的始祖小鸟》的设定资料库，收录角色、组织、地点与专有名词。",
+  "language": "zh-CN",
+  "content_dir": "content",
+  "assets_dir": "assets",
+  "output_dir": "docs",
+  "soft_breaks": "br",
+  "logo": "",
+  "theme": {
+    "accent": "#3a6ea5",
+    "accent2": "#24466b",
+    "accent3": "#5f9bd6",
+    "link": "#0b5fa5",
+    "link_visited": "#0b4a80",
+    "red": "#ba0000",
+    "page_bg": "#eef1f4",
+    "border": "#b9c9d9",
+    "border_soft": "#dbe5ee",
+    "box_head_a": "#eef5fb",
+    "box_head_b": "#dde9f4",
+    "mark": "#fff3a3"
+  },
+  "footer": "本站所有原创内容采用 <a href=\"https://creativecommons.org/licenses/by-nc-sa/4.0/\" target=\"_blank\" rel=\"noopener\">CC BY-NC-SA 4.0</a> 授权 · Copyright © 虹星 版权所有<br>《宝可梦》系列的名称与官方设定版权归任天堂 / GAME FREAK / Creatures Inc. 所有。",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "repo": {
+    "url": "https://github.com/Flygon611/Wiki_for_flygonish",
+    "branch": "main",
+    "content_path": "content",
+    "edit": true
+  },
+  "spoiler": {
+    "fold_headings": ["第二季", "第三季", "番外", "1.5", "结局", "真相", "幕后", "剧透"],
+    "banner_text": "本页包含剧情透露。标有 🔒 的小节默认折叠，读完第一季再展开也不迟。"
+  },
+  "infobox_callouts": ["info", "note", "abstract", "summary", "example"],
+  "extra_nav": []
+}

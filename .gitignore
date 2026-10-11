@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 编辑器回收站（删掉的页面暂存在这里，不进版本库）
+content/.trash/
+
+# 编辑器/构建的临时产物
+*.log

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>见远观星集 · 编辑器</title>
+<link rel="icon" href="/site/assets/favicon.svg">
+<link rel="stylesheet" href="/preview.css">
+<link rel="stylesheet" href="/ui/style.css">
+</head>
+<body>
+
+<header class="ed-top">
+  <span class="ed-logo">见远观星集 · 编辑器</span>
+  <span class="dot" id="dirty-dot" title="有未保存的改动"></span>
+  <div class="ed-top-actions">
+    <button id="btn-save" class="primary" title="Command/Ctrl + S">保存</button>
+    <button id="btn-build" title="把 content/ 重新编译成 docs/">构建站点</button>
+    <a href="/site/index.html" target="_blank" rel="noopener">打开站点 ↗</a>
+    <button id="btn-settings">站点设置</button>
+  </div>
+</header>
+
+<main class="ed-main">
+  <!-- 左：页面树 -->
+  <aside class="ed-left">
+    <div class="pane-head">
+      <input id="page-filter" type="search" placeholder="筛选页面名…" autocomplete="off">
+      <button id="btn-new" title="新建页面">＋ 新建</button>
+    </div>
+    <div class="tree" id="page-tree"><div class="empty">正在加载…</div></div>
+  </aside>
+
+  <!-- 中：编辑器 -->
+  <section class="ed-center">
+    <div class="editor-head">
+      <div class="eh-title">
+        <input id="meta-title" type="text" placeholder="页面标题（留空则用文件名）">
+      </div>
+      <div class="eh-path" id="cur-path">未选择页面 —— 从左边挑一个，或点「＋ 新建」</div>
+      <div class="toolbar" id="toolbar">
+        <button data-act="h2" title="二级标题">H2</button>
+        <button data-act="h3" title="三级标题">H3</button>
+        <span class="sep"></span>
+        <button data-act="bold" title="⌘B"><b>B</b></button>
+        <button data-act="italic" title="⌘I"><i>I</i></button>
+        <button data-act="strike" title="删除线"><s>S</s></button>
+        <span class="sep"></span>
+        <button data-act="wikilink" title="插入 [[双链]]">[[ ]]</button>
+        <button data-act="link" title="外部链接">链接</button>
+        <button data-act="image" title="插入图片">图片</button>
+        <span class="sep"></span>
+        <button data-act="infobox" title="插入信息框">信息框</button>
+        <button data-act="callout" title="插入提示框">提示框</button>
+        <button data-act="spoiler" title="插入可折叠的剧透小节">🔒 剧透节</button>
+        <button data-act="table" title="插入表格">表格</button>
+        <button data-act="hr" title="分隔线">—</button>
+        <span class="sep"></span>
+        <button data-act="frontmatter" title="插入或编辑 frontmatter">frontmatter</button>
+      </div>
+    </div>
+    <textarea id="editor" spellcheck="false" placeholder="从左边选一个页面，或者点「＋ 新建」创建一个。&#10;&#10;支持 Obsidian 语法：&#10;  [[双链]]、![[图片.jpg|150]]、> [!info] 信息框、**粗体**、==高亮==、%%注释%%"></textarea>
+    <div class="ed-status">
+      <span id="status-left">就绪</span>
+      <span class="right" id="status-right"></span>
+    </div>
+  </section>
+
+  <!-- 右：预览 / 信息框 / 图片 / Git -->
+  <aside class="ed-right">
+    <nav class="tabs" id="right-tabs">
+      <button data-tab="preview" class="on">预览</button>
+      <button data-tab="infobox">信息框</button>
+      <button data-tab="media">图片</button>
+      <button data-tab="git">Git</button>
+    </nav>
+    <div class="tab-body">
+      <div class="tab-panel on" id="panel-preview">
+        <div id="preview" class="article"></div>
+      </div>
+
+      <div class="tab-panel" id="panel-infobox">
+        <div class="form" id="ib-form">
+          <h3>信息框编辑</h3>
+          <p class="hint">从正文开头的 <code>&gt; [!info]</code> 文本块里读出字段。改完点「写回正文」，会替换掉原来的那个文本块。</p>
+          <div id="ib-status" class="hint">—</div>
+          <label>标题</label>
+          <input type="text" id="ib-title" placeholder="例如：神津">
+          <label>配图（填文件名，或用「图片」标签页挑）</label>
+          <input type="text" id="ib-image" placeholder="例如：Kamitsu_Front.jpg|150">
+          <label>字段</label>
+          <div id="ib-rows"></div>
+          <div class="actions">
+            <button id="ib-addrow">＋ 加一行</button>
+            <button id="ib-write" class="primary">写回正文</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-media">
+        <div class="form">
+          <h3>图片素材</h3>
+          <div class="drop" id="drop">把图片拖到这里上传<br><span style="font-size:11.5px">（也可以点这里选文件）</span></div>
+          <input type="file" id="file" accept="image/*" multiple hidden>
+          <div class="git-line" style="margin-top:10px">
+            <label style="margin:0">上传到：</label>
+            <select id="media-work" style="width:auto"></select>
+            <button id="btn-media-reload">刷新</button>
+          </div>
+          <p class="hint">点一张图 → 在光标处插入 <code>![[文件名|150]]</code></p>
+          <div class="media-grid" id="media-grid"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-git">
+        <div class="gitbox">
+          <h3 style="margin:0 0 8px;font-size:13px;color:var(--accent-2);border-bottom:1px solid var(--line-soft);padding-bottom:4px">Git</h3>
+          <div class="git-line"><b>分支</b><span id="git-branch">—</span>
+            <span id="git-remote-wrap" style="margin-left:auto"><b>远程</b><span id="git-remote">—</span></span></div>
+          <div class="git-line"><b>改动</b><span id="git-count">0</span> 个文件</div>
+          <ul class="changes" id="git-changes"></ul>
+          <label style="display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px">提交说明</label>
+          <input type="text" id="git-msg" placeholder="例如：补充上鹈的角色形象" style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:3px">
+          <div class="actions" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button id="btn-commit" class="primary">提交</button>
+            <button id="btn-commit-push">提交并推送</button>
+            <button id="btn-pull">拉取</button>
+            <button id="btn-git-refresh">刷新状态</button>
+          </div>
+          <div id="remote-setup" style="margin-top:14px;display:none">
+            <label style="display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px">仓库地址（还没有配远程时填）</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="remote-url" placeholder="https://github.com/用户名/仓库名.git"
+                     style="flex:1 1 auto;padding:5px 8px;border:1px solid var(--line);border-radius:3px">
+              <button id="btn-remote-set">设置</button>
+            </div>
+          </div>
+          <div class="log" id="git-log">（操作输出会显示在这里）</div>
+          <h3 style="margin:16px 0 8px;font-size:13px;color:var(--accent-2);border-bottom:1px solid var(--line-soft);padding-bottom:4px">上次构建</h3>
+          <div class="log" id="build-log">（还没构建过）</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="autocomplete" id="ac"></div>
+<div id="toast"></div>
+<div id="modal"></div>
+
+<script src="/ui/app.js"></script>
+</body>
+</html>

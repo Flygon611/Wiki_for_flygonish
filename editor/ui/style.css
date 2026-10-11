@@ -1,0 +1,151 @@
+/* nijiboshi-wiki 编辑器界面样式 */
+:root{
+  --bg:#eef1f4; --panel:#fff; --line:#c9d6e2; --line-soft:#e2eaf1;
+  --ink:#1b1b1b; --muted:#66727d; --accent:#3a6ea5; --accent-2:#24466b;
+  --accent-soft:#eaf2f9; --warn:#b8860b; --ok:#2f7d5a; --err:#b3261e;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink); overflow:hidden;
+  font:13px/1.6 "Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+button,input,select,textarea{font:inherit; color:inherit}
+button{cursor:pointer}
+
+.ed-top{
+  height:46px; display:flex; align-items:center; gap:12px; padding:0 14px;
+  background:linear-gradient(180deg,#5f9bd6,#3a6ea5 55%,#24466b); color:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.25); position:relative; z-index:20;
+}
+.ed-logo{font-weight:700; font-size:15px; letter-spacing:.4px; font-family:Georgia,"Songti SC",serif}
+.ed-top-actions{margin-left:auto; display:flex; align-items:center; gap:8px}
+.ed-top button,.ed-top a{
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); color:#fff;
+  padding:5px 11px; border-radius:3px; text-decoration:none; font-size:12.5px;
+}
+.ed-top button:hover,.ed-top a:hover{background:rgba(255,255,255,.3)}
+.ed-top button.primary{background:#fff; color:var(--accent-2); font-weight:700}
+.dot{width:9px; height:9px; border-radius:50%; background:#8ea6bd; display:inline-block}
+.dot.on{background:#ffd24a; box-shadow:0 0 6px #ffd24a}
+
+.ed-main{display:flex; height:calc(100% - 46px); overflow:hidden}
+.ed-left{width:272px; flex:0 0 272px; background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column}
+.ed-center{flex:1 1 auto; min-width:340px; display:flex; flex-direction:column; border-right:1px solid var(--line)}
+.ed-right{width:44%; min-width:380px; max-width:720px; flex:0 0 auto; display:flex; flex-direction:column; background:var(--panel)}
+
+.pane-head{display:flex; gap:6px; padding:8px; border-bottom:1px solid var(--line); background:#f7fafc}
+.pane-head input{flex:1 1 auto; min-width:0; padding:5px 8px; border:1px solid var(--line); border-radius:3px; background:#fff}
+.pane-head button{padding:5px 10px; border:1px solid var(--line); background:#fff; border-radius:3px; font-weight:700; color:var(--accent-2)}
+.pane-head button:hover{background:var(--accent-soft)}
+
+.tree{flex:1 1 auto; overflow:auto; padding:6px 0}
+.tree .grp{padding:6px 10px 3px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.6px; text-transform:none; background:#fafcfd; border-top:1px solid var(--line-soft); cursor:pointer; user-select:none}
+.tree .grp:first-child{border-top:0}
+.tree .grp .caret{display:inline-block; width:12px; color:#9aa8b4}
+.tree .item{display:block; padding:3px 10px 3px 22px; border-left:3px solid transparent; font-size:12.5px; color:#26405c; text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer}
+.tree .item:hover{background:var(--accent-soft); text-decoration:none}
+.tree .item.on{background:var(--accent-soft); border-left-color:var(--accent); font-weight:700}
+.tree .item .stub{margin-left:5px; font-size:10px; color:#c68a2e}
+.tree .empty{padding:10px; color:var(--muted); font-size:12px}
+body.filtering .tree .item,
+body.filtering .tree .item[data-hit="1"]{display:block}
+
+.editor-head{background:#f7fafc; border-bottom:1px solid var(--line); padding:7px 10px 0}
+.eh-title{display:flex; align-items:center; gap:8px}
+.eh-title input{flex:1 1 auto; border:0; background:transparent; font-size:17px; font-weight:700;
+  font-family:Georgia,"Songti SC",serif; padding:2px 0; outline:0; border-bottom:1px dashed transparent}
+.eh-title input:focus{border-bottom-color:var(--line)}
+.eh-path{font-size:11.5px; color:var(--muted); margin:2px 0 6px; word-break:break-all}
+.toolbar{display:flex; flex-wrap:wrap; gap:4px; padding:0 0 7px}
+.toolbar button{border:1px solid var(--line); background:#fff; border-radius:3px; padding:3px 8px; font-size:12px; color:#26405c}
+.toolbar button:hover{background:var(--accent-soft); border-color:var(--accent)}
+.toolbar .sep{width:1px; background:var(--line-soft); margin:0 3px}
+
+#editor{
+  flex:1 1 auto; width:100%; border:0; outline:0; resize:none; padding:14px 16px;
+  font:13.5px/1.85 "SF Mono",Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+  background:#fff; color:#17202a; tab-size:2;
+}
+.ed-status{display:flex; gap:12px; padding:5px 12px; border-top:1px solid var(--line);
+  background:#f7fafc; font-size:11.5px; color:var(--muted)}
+.ed-status .right{margin-left:auto}
+
+.tabs{display:flex; gap:2px; padding:7px 8px 0; background:#f0f5f9; border-bottom:1px solid var(--line)}
+.tabs button{border:1px solid var(--line); border-bottom:0; background:#e6eef5; border-radius:3px 3px 0 0;
+  padding:5px 13px; font-size:12.5px; color:#31536f}
+.tabs button.on{background:#fff; font-weight:700; color:var(--ink); padding-bottom:6px}
+.tab-body{flex:1 1 auto; overflow:auto; position:relative}
+.tab-panel{display:none; padding:0}
+.tab-panel.on{display:block}
+
+#preview{padding:18px 20px 40px; background:#fff; font-size:13px}
+#preview .page-title{font-size:22px; margin:0 0 10px}
+#preview .stub-notice{margin-bottom:10px}
+
+.form{padding:12px 14px 40px}
+.form h3{margin:0 0 8px; font-size:13px; color:var(--accent-2); border-bottom:1px solid var(--line-soft); padding-bottom:4px}
+.form label{display:block; font-size:11.5px; color:var(--muted); margin:9px 0 3px}
+.form input[type=text],.form input[type=url],.form textarea,.form select{
+  width:100%; padding:5px 8px; border:1px solid var(--line); border-radius:3px; background:#fff}
+.form textarea{min-height:90px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px}
+.form .row{display:flex; gap:6px; align-items:center; margin-bottom:5px}
+.form .row input.k{flex:0 0 96px}
+.form .row input.v{flex:1 1 auto}
+.form .row button{border:1px solid var(--line); background:#fff; border-radius:3px; padding:4px 8px; color:#a03030}
+.form .hint{color:var(--muted); font-size:11.5px; margin:6px 0}
+.form .actions{display:flex; gap:8px; margin-top:12px}
+.form .actions button{padding:6px 14px; border:1px solid var(--line); background:#fff; border-radius:3px}
+.form .actions button.primary{background:var(--accent); border-color:var(--accent-2); color:#fff; font-weight:700}
+.form .actions button:hover{filter:brightness(1.05)}
+.form fieldset{border:1px solid var(--line-soft); border-radius:3px; padding:4px 10px 10px; margin:10px 0}
+
+.drop{border:2px dashed var(--line); border-radius:4px; padding:18px; text-align:center; color:var(--muted);
+  background:#fafcfd; margin:10px 0}
+.drop.hot{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-2)}
+.media-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; margin-top:10px}
+.media-grid .m{border:1px solid var(--line-soft); border-radius:3px; padding:4px; background:#fff; text-align:center; cursor:pointer}
+.media-grid .m:hover{border-color:var(--accent); background:var(--accent-soft)}
+.media-grid .m img{width:100%; height:64px; object-fit:contain; background:#fff}
+.media-grid .m span{display:block; font-size:10px; color:var(--muted); word-break:break-all; line-height:1.3; margin-top:3px}
+
+.gitbox{padding:12px 14px 40px}
+.git-line{display:flex; gap:8px; align-items:center; font-size:12px; margin-bottom:5px; flex-wrap:wrap}
+.git-line b{color:var(--accent-2)}
+.changes{list-style:none; margin:6px 0 12px; padding:0; max-height:200px; overflow:auto; border:1px solid var(--line-soft); border-radius:3px}
+.changes li{padding:3px 8px; font-size:12px; border-bottom:1px solid var(--line-soft); display:flex; gap:8px}
+.changes li:last-child{border-bottom:0}
+.changes .code{flex:0 0 26px; font-weight:700; color:var(--warn)}
+.log{background:#1f2731; color:#d6e2ee; border-radius:4px; padding:9px 11px; font:11.5px/1.6 "SF Mono",Menlo,Consolas,monospace;
+  white-space:pre-wrap; word-break:break-word; max-height:280px; overflow:auto; margin-top:10px}
+
+.autocomplete{position:fixed; z-index:60; background:#fff; border:1px solid var(--line);
+  box-shadow:0 4px 14px rgba(0,0,0,.22); border-radius:3px; max-height:240px; overflow:auto; display:none}
+.autocomplete.on{display:block}
+.autocomplete .ac-item{padding:5px 10px; font-size:12.5px; cursor:pointer; display:flex; gap:8px; align-items:baseline}
+.autocomplete .ac-item:hover,.autocomplete .ac-item.sel{background:var(--accent-soft)}
+.autocomplete .ac-item .ac-sub{color:var(--muted); font-size:11px; margin-left:auto}
+
+#toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:80;
+  display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
+#toast .t{background:#26313d; color:#fff; padding:8px 16px; border-radius:4px; font-size:12.5px;
+  box-shadow:0 4px 14px rgba(0,0,0,.3); opacity:0; transform:translateY(8px); transition:all .2s}
+#toast .t.on{opacity:1; transform:none}
+#toast .t.ok{background:#2f7d5a}
+#toast .t.err{background:#b3261e}
+
+#modal{position:fixed; inset:0; background:rgba(20,28,36,.5); z-index:70; display:none;
+  align-items:center; justify-content:center}
+#modal.on{display:flex}
+#modal .box{background:#fff; border-radius:5px; padding:18px 20px; width:430px; max-width:92vw;
+  max-height:88vh; overflow:auto; box-shadow:0 10px 40px rgba(0,0,0,.4)}
+#modal h3{margin:0 0 10px; font-size:15px}
+#modal .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:16px}
+#modal .actions button{padding:6px 14px; border:1px solid var(--line); background:#fff; border-radius:3px}
+#modal .actions button.primary{background:var(--accent); border-color:var(--accent-2); color:#fff; font-weight:700}
+#modal .danger{color:var(--err); font-size:12.5px}
+
+@media (max-width:1180px){
+  .ed-right{width:40%; min-width:320px}
+  .ed-left{width:224px; flex-basis:224px}
+}

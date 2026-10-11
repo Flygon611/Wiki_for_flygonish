@@ -1,0 +1,438 @@
+{
+  "_note": "由 tools/import_obsidian.py 生成，记录页面的 Obsidian 来源与导入时哈希",
+  "_imported_at": "2026-10-12 00:36:06",
+  "_vault": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage",
+  "files": {
+    "content/青梅竹马失踪后变成电飞鼠这档事/组织/国际警察.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/组织/国际警察.md",
+      "sha1": "5bf53e6511a1047171870c41814839d7847d06e0",
+      "bytes": 1075
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/组织/宝可梦复原团.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/组织/宝可梦复原团.md",
+      "sha1": "f447beff646083255a349f6e46c170ae86297540",
+      "bytes": 2247
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/组织/宝可梦收留所.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/组织/宝可梦收留所.md",
+      "sha1": "e09c3e515a481238b05333674b1c28390f1cbb42",
+      "bytes": 726
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/组织/实验室.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/组织/实验室.md",
+      "sha1": "c0393ba2d8ff1a3f4faaf43ad0b4e725b1c0ac1a",
+      "bytes": 585
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/组织/抵抗人类联盟.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/组织/抵抗人类联盟.md",
+      "sha1": "1149d6743841f4a6aa83303e090a113886f2b094",
+      "bytes": 834
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/特殊名词/来自帕底亚地区的一封信.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/特殊名词/来自帕底亚地区的一封信.md",
+      "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "bytes": 0
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/特殊名词/超能力.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/特殊名词/超能力.md",
+      "sha1": "03fced869523b2545e895a39d1363987e7549117",
+      "bytes": 2476
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/特殊名词/超能力结晶.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/特殊名词/超能力结晶.md",
+      "sha1": "ea1d2c8138cfc877f1e6c3ca466054d1a106c0b9",
+      "bytes": 902
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/特殊事件/宝可梦化事件.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/特殊事件/宝可梦化事件.md",
+      "sha1": "6609d4f01953b3fb841c5b6fa8e8da1e58b7c96c",
+      "bytes": 3525
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/上鹈.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/上鹈.md",
+      "sha1": "1bba0f34e316d6f1edf3905e4da11d2dc67822b6",
+      "bytes": 4717
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/南绪.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/南绪.md",
+      "sha1": "c7f5243020a04018542d28ad7cd486909252b883",
+      "bytes": 4857
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/守龟.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/守龟.md",
+      "sha1": "6f752b34270b59bffce0ea90647a4ea1e6f39215",
+      "bytes": 4667
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/暗镜.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/暗镜.md",
+      "sha1": "989789d2f35164ffd08338bb538333226b0ca0cf",
+      "bytes": 7187
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/月元.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/月元.md",
+      "sha1": "8aefd68ed2176eaf99134b1d421976ecac5c5f37",
+      "bytes": 3858
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/栖羽.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/栖羽.md",
+      "sha1": "ee03b5c01c0bc5f43ead6fc6bfd488f4b43a6ab2",
+      "bytes": 1659
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/电龙团长.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/电龙团长.md",
+      "sha1": "26d3b9df3e043c652dc6fcd068e61db9376a4978",
+      "bytes": 3458
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/真夕.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/真夕.md",
+      "sha1": "d532e77c413258ba001349fc3a70f3dc9b65e57f",
+      "bytes": 3934
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/绯蓼.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/绯蓼.md",
+      "sha1": "4615ffb90a13ed396c9e7c6e78110d0f09223bd9",
+      "bytes": 16800
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/羽瑚.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/羽瑚.md",
+      "sha1": "2bb6b61159a088e413d5d6b2228a40f54e0e8ffa",
+      "bytes": 2518
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/边水.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/边水.md",
+      "sha1": "474383f53721cf14ac060adc6e354fc74d16beb2",
+      "bytes": 4457
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/铃兰.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/铃兰.md",
+      "sha1": "fda05ed6438f87e266079e6e2aabb65f8c4f4fb7",
+      "bytes": 7602
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/人物/铃砂.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/人物/铃砂.md",
+      "sha1": "f40bbe23c6c0945b575efacb06933f0328e13c8e",
+      "bytes": 4736
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Bemizu_Amaiha.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Bemizu_Amaiha.jpg",
+      "sha1": "cb2f7fe51b43c09feb5d291e41bc56757fa135a1"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Bemizu_Azumarill.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Bemizu_Azumarill.jpg",
+      "sha1": "dda685be459a0986c15419dd709e475ce5229b8b"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Bemizu_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Bemizu_Front.jpg",
+      "sha1": "2a46f6a314f95d246bc10d102292373f630e71ef"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Bemizu_Nametsuki.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Bemizu_Nametsuki.jpg",
+      "sha1": "a1c7f342b22877f795f97d4235a0d62b68b43387"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/CAB6BF2C7F653E94C51C2E8F0DE2CC73.PNG": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/CAB6BF2C7F653E94C51C2E8F0DE2CC73.PNG",
+      "sha1": "843344b25296efc5601e13077ed0e29a6ae56576"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Denji_Cute.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Denji_Cute.jpg",
+      "sha1": "c8f49c725e10a95fbb9fe3c7ff70b1ffd5b19688"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Denji_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Denji_Front.jpg",
+      "sha1": "38db9e0685fdaf6d08a405c6c13da1b09ea0e590"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Denji_Uhmm.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Denji_Uhmm.jpg",
+      "sha1": "19ac689714de66e903f105910944e817033098f3"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Denji_youth.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Denji_youth.jpg",
+      "sha1": "ce4cbb68a2df1b8ea882e950e9978e0abf91964a"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Hanebane_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Hanebane_Front.jpg",
+      "sha1": "14711c1f487b5f33a1266e9ba08af162a3722102"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Haneko_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Haneko_Front.jpg",
+      "sha1": "a24be843e24582f4e7511616e2d0a13e0bfeffef"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/InternationalPolice.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/InternationalPolice.jpg",
+      "sha1": "5908a787211a0c3f5d17ed2a7218ac0695d40c50"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/InternationalPolice_Logo.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/InternationalPolice_Logo.jpg",
+      "sha1": "626500fc0ddeb504aa1379e1681a895404a59552"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kairo_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kairo_Front.jpg",
+      "sha1": "a2f64af9f95f1bcf6560fd34ea9c48ee7ab3aa56"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_Apron.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_Apron.jpg",
+      "sha1": "137f3a92a51e3d504e6c4a0480b0674848062df5"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_FlygonFront.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_FlygonFront.jpg",
+      "sha1": "06cf846336b72da3623fdab2f5284f9eb5dacccf"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_Front.jpg",
+      "sha1": "2b0d26f2cbf72f40b3d5152e01d269f2efa7c7c5"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_LarvaFront.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_LarvaFront.jpg",
+      "sha1": "fd70751f4b7d3ccf40793f829d956ca78c9eaaef"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_LarvaHeight.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_LarvaHeight.jpg",
+      "sha1": "0cd52634f9a5bea958427e7e3dfdbdce96db384c"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamitsu_NitsuiteLovelove.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamitsu_NitsuiteLovelove.jpg",
+      "sha1": "48f329385d39da02cbf933b5bb38f3f6d5be336d"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_Childhood.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_Childhood.jpg",
+      "sha1": "51be75a2265029aceb7ada56920fddb657f4ec0a"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_FirstSeason.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_FirstSeason.jpg",
+      "sha1": "54d78819df167e3ebd150b8f801e512da6d1256f"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_Front.jpg",
+      "sha1": "7fb4c3563d34045ba148e7fc3bf2b3445f599bef"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_Longhair.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_Longhair.jpg",
+      "sha1": "a396b4d879d55b9420e9773f17131d15e5cb7618"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_Natsu.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_Natsu.jpg",
+      "sha1": "367119c1b35ec4e44667688195c1c4210b9e28a9"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Kamiu_Sazanndora.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Kamiu_Sazanndora.jpg",
+      "sha1": "681e3e92c594011b627a2382b6b71fdc63b5bb22"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Konoki_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Konoki_Front.jpg",
+      "sha1": "b1483b6a79d653b0ef3091f2dfbdb5c1e5190d77"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Koori_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Koori_Front.jpg",
+      "sha1": "b67bdde4eb73606f1c41674b971d210512350838"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mamogame_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mamogame_Front.jpg",
+      "sha1": "5a2b3db4e407788a074298221ae2668e8b0bedaa"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mayu_Colorful.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mayu_Colorful.jpg",
+      "sha1": "46fc7bd81031c5a8fcd1055d978d9b877dc8dd36"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mayu_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mayu_Front.jpg",
+      "sha1": "fc50f72f5f249188f5b8364d8668aa00e53b290a"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mayu_Head.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mayu_Head.jpg",
+      "sha1": "5f9a5a0db907dd68fdc4f59b1e374be3adb649c1"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mayu_Nadenade.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mayu_Nadenade.jpg",
+      "sha1": "e924096afb96e55b197050eccc1f4c2a87225041"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Mayu_Nekutai.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Mayu_Nekutai.jpg",
+      "sha1": "1678fe2dcf23a7d49f2c431174d50c90bc78e540"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Naoh_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Naoh_Front.jpg",
+      "sha1": "d8850977d1dcdc736a034b3115ab2999862ca9e6"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Naoh_Nametsuki.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Naoh_Nametsuki.jpg",
+      "sha1": "61e30b255bb5a723c1554f9eb47c30627b262a5b"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Naoh_NitsuiteManga.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Naoh_NitsuiteManga.jpg",
+      "sha1": "b3e09758180f0627d8fa2039a2d6926ca621b757"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Naoh_Small.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Naoh_Small.jpg",
+      "sha1": "2c62e3df96c5d2b4855f6674f396674e1e8ce36a"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Naoh_side.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Naoh_side.jpg",
+      "sha1": "2eb81efb7aaed2748ab9f8cf6ef263434cec8e2d"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Pokko_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Pokko_Front.jpg",
+      "sha1": "3138e7be5dbaffeb5956a85ed6b042cf1541efae"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Rinne_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Rinne_Front.jpg",
+      "sha1": "f4c3e8fd8454804b14a3ed6cbd1838f3b08be0a0"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Suzusuna_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Suzusuna_Front.jpg",
+      "sha1": "472014c43e44152ad90687b6d7ce4963f7c053c5"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Suzusuna_questioning.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Suzusuna_questioning.jpg",
+      "sha1": "f17f7af9ee72233b34056882d6923cad59f37e1a"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_Childhood.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_Childhood.jpg",
+      "sha1": "583898f1f27d6442c67b80cbda21a2e420485c4b"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_Colourful.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_Colourful.jpg",
+      "sha1": "11484db0a2f0504bc8ffdf7d235b06799112239d"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_Front.jpg",
+      "sha1": "5949edd880224a3f903e47666851e725ef021f5f"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_KamiuChildto.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_KamiuChildto.jpg",
+      "sha1": "b0bd8bfa7258a4c25345913e3ee73a191e799fe1"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_Kinomi.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_Kinomi.jpg",
+      "sha1": "8032088732906f131b26f9c29557526fefe3cc1e"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Tsukimoto_Stand.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Tsukimoto_Stand.jpg",
+      "sha1": "52c509cc3efb7492bf38d269aa15465f63664678"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Wataran_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Wataran_Front.jpg",
+      "sha1": "ec358343ec63be51dc94e9d73e025bfc036f0f38"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_Afraid.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_Afraid.jpg",
+      "sha1": "d1e6b50ecb0b2a96cfe825a962b7ea1f20457043"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_Front.jpg",
+      "sha1": "0ef60d3cb91c64a01dc542d56129c06991d567f5"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_Height.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_Height.jpg",
+      "sha1": "026988e977c0caa150ed0ebcf9a0786650c7d2ec"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_Name.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_Name.jpg",
+      "sha1": "22bfcca0b56b9b6689e036b21b0f673536f89354"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_School.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_School.jpg",
+      "sha1": "213817c95c883f7ce1895d4e4e7cc2958743f00c"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Yamigane_Whenasked.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Yamigane_Whenasked.jpg",
+      "sha1": "42f587c054b1c336424210150ca2d654d3153689"
+    },
+    "assets/青梅竹马失踪后变成电飞鼠这档事/Youtwo_Front.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/Assets/Youtwo_Front.jpg",
+      "sha1": "bee9bce64e738202a22caaf019e264be53b25f19"
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/第二季人物/冻.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/第二季人物/冻.md",
+      "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "bytes": 0
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/第二季人物/回路.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/第二季人物/回路.md",
+      "sha1": "e545dfa785ab66cd38e4fe7c259fb0b98329cbcd",
+      "bytes": 1851
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/第二季人物/此树.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/第二季人物/此树.md",
+      "sha1": "0531ed5eda292373b3434ef2922fb0101f187d05",
+      "bytes": 4810
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/第二季人物/蒲子.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/第二季人物/蒲子.md",
+      "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "bytes": 0
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/总结导航/幼失鼠第一季宝可梦化的人类.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/总结导航/幼失鼠第一季宝可梦化的人类.md",
+      "sha1": "a598bb4bb0bf478b5b7a670ead0764860d32d2cf",
+      "bytes": 490
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/总结导航/幼失鼠第二季宝可梦化的人类.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/总结导航/幼失鼠第二季宝可梦化的人类.md",
+      "sha1": "fc92882ac2a1da14ab72b6fd7835a93f16cf324e",
+      "bytes": 213
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/总结导航/幼驯染失踪后变成宝可梦这档事1.5.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/总结导航/幼驯染失踪后变成宝可梦这档事1.5.md",
+      "sha1": "ea5a6ac766f25de9dd842abc79baf8289a8fb16a",
+      "bytes": 3621
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/总结导航/幼驯染失踪后变成宝可梦这档事1.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/总结导航/幼驯染失踪后变成宝可梦这档事1.md",
+      "sha1": "ef7f3c841a754f742da0e7db8610d88ff3148b50",
+      "bytes": 8014
+    },
+    "content/青梅竹马失踪后变成电飞鼠这档事/总结导航/幼驯染失踪后变成宝可梦这档事2.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/幼驯染失踪后变成宝可梦这档事/总结导航/幼驯染失踪后变成宝可梦这档事2.md",
+      "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "bytes": 0
+    },
+    "content/想要飞的始祖小鸟/地点/菲洛若亚大陆.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/地点/菲洛若亚大陆.md",
+      "sha1": "7782ad3fdf1e4bc546e6c898b82c7384d7526d06",
+      "bytes": 717
+    },
+    "content/想要飞的始祖小鸟/地点/岛屿/沃雷奥斯岛.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/地点/岛屿/沃雷奥斯岛.md",
+      "sha1": "b6bbeb61761943a47f0f6b606c6d66409271ba04",
+      "bytes": 449
+    },
+    "content/想要飞的始祖小鸟/地点/岛屿/盐风镇.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/地点/岛屿/盐风镇.md",
+      "sha1": "6bdf2a14f4069232fb37cd22d12db7830197a964",
+      "bytes": 145
+    },
+    "content/想要飞的始祖小鸟/地点/大陆/繁盛之森.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/地点/大陆/繁盛之森.md",
+      "sha1": "3986cce44badc082eea27d9e7eea2db4e6055161",
+      "bytes": 245
+    },
+    "content/想要飞的始祖小鸟/地点/大陆/繁盛村.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/地点/大陆/繁盛村.md",
+      "sha1": "ec8a4332d559dcbd7ec96d17da968059a996d1cb",
+      "bytes": 327
+    },
+    "assets/想要飞的始祖小鸟/Actors_ScriptSm.png": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/使用贴图/Actors_ScriptSm.png",
+      "sha1": "d668e6ecfe149cb4940cb0afe43348981d9038c6"
+    },
+    "assets/想要飞的始祖小鸟/Fliegen_sprite_cut.png": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/使用贴图/Fliegen_sprite_cut.png",
+      "sha1": "e730c797f25d9eaa667dc50fce25b695b5611f9f"
+    },
+    "assets/想要飞的始祖小鸟/Map_handwrittenEXP.jpg": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/使用贴图/Map_handwrittenEXP.jpg",
+      "sha1": "aa2c0cee066cc83feec8529dfcd5465b15ede5f8"
+    },
+    "content/想要飞的始祖小鸟/人物/主角.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/人物/主角.md",
+      "sha1": "881e650aee040b0565da6cd61116702071653235",
+      "bytes": 266
+    },
+    "content/想要飞的始祖小鸟/人物/符利根.md": {
+      "source": "/Users/nijiboshi06/Desktop/工具/Obsidian/NijiboshiStorage/想要飞的始祖小鸟/人物/符利根.md",
+      "sha1": "475f8fd42a13bec5f4a70244f4759f64527a7854",
+      "bytes": 250
+    }
+  },
+  "_renamed_note": "作品《幼驯染失踪后变成宝可梦这档事》于建站时更名为《青梅竹马失踪后变成电飞鼠这档事》（wiki.config.json 与 _作品.json 为准），此处同步更新目标路径。"
+}
