@@ -35,11 +35,18 @@ def sha1(path):
 
 
 def walk_files(base):
-    """产出 (相对路径, 绝对路径)，跳过隐藏目录与临时文件。"""
+    """产出 (相对路径, 绝对路径)，跳过隐藏目录与临时文件。
+
+    以 `_` 开头的目录与 .md 文件视为**工作文档**，不导入（和 `_作品.json` 同一套约定）。
+    这样放在作品文件夹里的建页规范、提取清单、原始大纲不会被当成正式词条发布。
+    """
     for dirpath, dirnames, filenames in os.walk(base):
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIR and not d.startswith(".")]
+        dirnames[:] = [d for d in dirnames
+                       if d not in SKIP_DIR and not d.startswith(".") and not d.startswith("_")]
         for name in sorted(filenames):
             if name.startswith(".") or name == ".DS_Store":
+                continue
+            if name.startswith("_") and name.lower().endswith(".md"):
                 continue
             full = os.path.join(dirpath, name)
             yield os.path.relpath(full, base), full
