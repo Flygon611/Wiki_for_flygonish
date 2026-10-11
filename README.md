@@ -129,6 +129,27 @@ python3 tools/check_site.py # 自检：链接、图片、样式是否都存在
 
 注意：首页只能有一个。同时存在 `content/首页.md` 和 `content/index.md` 时构建会直接报错。
 
+### 图标素材与授权
+
+侧栏那几个像素图标来自 [pixelarticons](https://github.com/halfmage/pixelarticons)（**MIT**），
+放在 `assets/icons/`，同目录有 `README.txt` 记着出处。要换图标：把 SVG 丢进那个目录，
+再改 `build.py` 的 `make_sidebar()` 里各盒子挂的 `"icon": "xxx.svg"`。
+
+> 图标是**内联**进 HTML 的（不是 `<img>`），因为 SVG 用的是 `fill="currentColor"`，
+> 只有内联才能跟着主题配色变。文件里的 `width`/`height` 会被去掉，尺寸交给 CSS 的 `.pk` 控制。
+
+用别的图标库时留意授权，常见几种：
+
+| 库 | 授权 | 能不能打包进公开仓库 |
+| --- | --- | --- |
+| Kenney | CC0 | ✅ 可以，连署名都不用 |
+| pixelarticons | MIT | ✅ 可以，保留授权声明 |
+| Fugue Icons | CC BY 3.0 | ✅ 可以，需要署名 |
+| ICOOON MONO | 免费商用、免署名 | ❌ **禁止再分发**，只能直接在页面里用 |
+| FamFamFam Silk | 原为 CC BY 2.5 | ⚠️ 官网已挂，现有镜像多数没写授权 |
+
+站上的[小按钮与素材](content/小按钮.md)那一页有更完整的清单。
+
 ### 页脚的 88×31 小按钮
 
 `assets/buttons/` 里是那个年代的站标。要改文字或配色，编辑

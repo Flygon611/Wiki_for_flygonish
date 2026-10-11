@@ -3,6 +3,37 @@
 
 import datetime
 import html as _html
+import os
+import re
+
+# 图标目录（由 build.py 在构建时指过来），见 assets/icons/
+ICON_DIR = None
+_icon_cache = {}
+
+
+def icon(name, cls="pk"):
+    """内联一个 SVG 图标。
+
+    必须内联而不是 <img>，否则 SVG 里的 fill="currentColor" 拿不到外部颜色。
+    文件不存在就返回空串，页面上不会出现破图。
+    """
+    if not name or not ICON_DIR:
+        return ""
+    key = (name, cls)
+    if key in _icon_cache:
+        return _icon_cache[key]
+    path = os.path.join(ICON_DIR, name)
+    svg = ""
+    if os.path.isfile(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                svg = f.read().strip()
+            svg = svg.replace("<svg ", '<svg class="%s" ' % cls, 1)
+            svg = re.sub(r'\s(?:width|height)="[^"]*"', "", svg)
+        except OSError:
+            svg = ""
+    _icon_cache[key] = svg
+    return svg
 
 FAVICON = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
@@ -93,6 +124,12 @@ img{max-width:100%}
 .box li a .cnt{color:var(--muted); font-size:11px; float:right}
 .box .box-body{padding:8px 9px; font-size:12px; color:#333}
 .box .sub{padding:4px 9px 2px 9px; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.5px}
+/* 内联像素图标（来自 assets/icons/） */
+.pk{width:14px; height:14px; flex:0 0 auto; vertical-align:-2px; margin-right:5px; fill:currentColor}
+.box-title .pk{color:var(--accent)}
+.sidebar .work-title .pk{color:var(--accent)}
+.stub-notice .pk{color:#b8860b; width:15px; height:15px; vertical-align:-3px}
+.pk.pk-lg{width:20px; height:20px; color:#b8860b; vertical-align:-5px}
 .sidebar .work-block{border-top:1px solid var(--border-soft)}
 .sidebar .work-title{display:block; padding:6px 9px; font-weight:700; font-size:12.5px; color:var(--accent-2)}
 .sidebar .work-title:hover{text-decoration:none; background:#eef4fa}
@@ -485,10 +522,12 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         cls = "box on" if box.get("key") and box["key"] == sidebar_active else "box"
         sb.append('<div class="%s">' % cls)
         if box.get("title"):
+            ic = icon(box.get("icon"))
             if box.get("href"):
-                sb.append('<a class="work-title" href="%s%s">%s</a>' % (base, esc(box["href"]), esc(box["title"])))
+                sb.append('<a class="work-title" href="%s%s">%s%s</a>'
+                          % (base, esc(box["href"]), ic, esc(box["title"])))
             else:
-                sb.append('<div class="box-title">%s</div>' % esc(box["title"]))
+                sb.append('<div class="box-title">%s%s</div>' % (ic, esc(box["title"])))
         if box.get("html"):
             sb.append(box["html"])
         elif box.get("items"):
@@ -505,7 +544,7 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         sb.append("</div>")
 
     # ---- 站点图标 / 社交缩略图 ----
-    icon = site.config.get("icon") or "favicon.svg"
+    icon_file = site.config.get("icon") or "favicon.svg"   # 注意别叫 icon，会遮住上面的 icon() 函数
     apple = site.config.get("apple_icon") or ""
     apple_meta = ('<link rel="apple-touch-icon" href="%sassets/%s">' % (base, esc(apple))
                   if apple else "")
@@ -633,7 +672,7 @@ def render_layout(site, *, title, body, rel, current_page=None, article_class="a
         "backlinks": backlinks,
         "head_extra": head_extra,
         "body_extra": top_extra,
-        "icon": esc(icon),
+        "icon": esc(icon_file),
         "apple_icon_meta": apple_meta,
         "og_meta": "\n".join(og),
         "buttons": buttons_html,

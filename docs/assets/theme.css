@@ -78,6 +78,12 @@ img{max-width:100%}
 .box li a .cnt{color:var(--muted); font-size:11px; float:right}
 .box .box-body{padding:8px 9px; font-size:12px; color:#333}
 .box .sub{padding:4px 9px 2px 9px; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.5px}
+/* 内联像素图标（来自 assets/icons/） */
+.pk{width:14px; height:14px; flex:0 0 auto; vertical-align:-2px; margin-right:5px; fill:currentColor}
+.box-title .pk{color:var(--accent)}
+.sidebar .work-title .pk{color:var(--accent)}
+.stub-notice .pk{color:#b8860b; width:15px; height:15px; vertical-align:-3px}
+.pk.pk-lg{width:20px; height:20px; color:#b8860b; vertical-align:-5px}
 .sidebar .work-block{border-top:1px solid var(--border-soft)}
 .sidebar .work-title{display:block; padding:6px 9px; font-weight:700; font-size:12.5px; color:var(--accent-2)}
 .sidebar .work-title:hover{text-decoration:none; background:#eef4fa}
