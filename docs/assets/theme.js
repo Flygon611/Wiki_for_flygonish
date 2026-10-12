@@ -100,7 +100,7 @@
     var DELAY = 400;         // 悬停多久才弹（毫秒）
     var GRACE = 200;         // 离开链接/卡片后留一点时间，让人能把鼠标移进卡片
     var GAP = 6, EDGE = 8;
-    var PV_VER = '02919f00';
+    var PV_VER = 'db86917c';
 
     var input = document.getElementById('wiki-search-input');
     var indexUrl = input && input.getAttribute('data-index');

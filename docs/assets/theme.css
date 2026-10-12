@@ -311,12 +311,32 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 
 @media (max-width:900px){
   .layout{flex-direction:column}
-  .sidebar{width:100%; flex:1 1 auto}
+  /* 手机上正文排到侧栏前面。侧栏自己就有一屏多高，排在前面的话
+     要先滚过「导航／作品分类／工具／关于」才看得到文章。 */
+  .content{order:1}
+  .sidebar{order:2; width:100%; flex:1 1 auto}
   .infobox{float:none; width:auto; margin:0 0 14px}
   .pagelist{columns:1}
   .search-form input{width:130px}
   .site-name{font-size:20px}
   .site-tagline{display:none}
+}
+@media (max-width:620px){
+  /* 窄屏：顶栏那排链接和下面的导航条内容重复，收掉省地方 */
+  .top-links{display:none}
+  .search-form input{width:104px}
+  .site-name{font-size:18px}
+  .site-header-inner{gap:10px}
+  .nav-inner>a{padding:8px 10px; font-size:12.5px}
+  .layout{padding:0 10px; gap:12px}
+  .article-wrap{padding:14px 13px 16px}
+  h1.page-title{font-size:21px}
+  .article h2{font-size:17px}
+  .article h3{font-size:15px}
+  .infobox{max-width:100%}
+  /* 窄屏上横幅文字会折行，浮动的 [关闭] 会压到正文上，改成单独一行 */
+  .spoiler-banner{padding-right:13px}
+  .spoiler-banner .dismiss{float:none; display:block; text-align:right; margin-top:2px}
 }
 @media print{
   .top-bar,.nav-bar,.sidebar,.page-tabs,.site-footer,.search-form,.pv-card{display:none}
