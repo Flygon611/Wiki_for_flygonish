@@ -90,7 +90,10 @@ class El {
   }
   addEventListener(type, fn) { (this._listeners[type] ||= []).push(fn); }
   dispatch(type, ev = {}) { (this._listeners[type] || []).forEach((fn) => fn({ type, target: this, ...ev })); }
-  getBoundingClientRect() { return { left: 100, top: 300, right: 220, bottom: 318, width: 120, height: 18 }; }
+  setRect(r) { this._rect = r; }
+  getBoundingClientRect() {
+    return this._rect || { left: 100, top: 300, right: 220, bottom: 318, width: 120, height: 18 };
+  }
 }
 
 class Doc {
@@ -276,7 +279,55 @@ async function main() {
   await tick(); await tick();
   check("红色（不存在）链接不弹卡片", w.doc.getElementById("pv-card") === null);
 
-  // ------------------------------------------------ 7. 触屏设备整套不启用
+  // ------------------------------------------------ 7. href 还原：../ 与 # 锚点、?query
+  const chaos = findItem((i) => dec(i.u) === "青梅竹马失踪后变成电飞鼠这档事/特殊名词/超能力.html");
+  const up = link(w.doc, "../%E7%89%B9%E6%AE%8A%E5%90%8D%E8%AF%8D/%E8%B6%85%E8%83%BD%E5%8A%9B.html?x=1#sec-1");
+  w.doc.dispatch("mouseover", { target: up, relatedTarget: null });
+  w.advance(450);
+  await tick(); await tick();
+  card = w.doc.getElementById("pv-card");
+  check("href 带 ../ 与 # 锚点也能对上条目",
+        !!card && !!chaos && card.innerHTML.includes(chaos.t), `t=${chaos && chaos.t}`);
+
+  // 外链（同样挂着 wikilink 类）不弹
+  w.doc.dispatch("mouseout", { target: up, relatedTarget: null });
+  w.advance(300);
+  const ext = link(w.doc, "https://wiki.52poke.com/wiki/%E4%B8%8A%E9%B9%88");
+  w.doc.dispatch("mouseover", { target: ext, relatedTarget: null });
+  w.advance(600);
+  await tick(); await tick();
+  check("站外 http 链接不弹卡片", w.doc.getElementById("pv-card") === null);
+
+  // 链到当前页自己不弹（Wikipedia 也不弹）
+  const self = link(w.doc, encodeURI("青梅竹马失踪后变成电飞鼠这档事/人物/暗镜.html"));
+  w.doc.dispatch("mouseover", { target: self, relatedTarget: null });
+  w.advance(600);
+  await tick(); await tick();
+  check("指向当前页自身的链接不弹卡片", w.doc.getElementById("pv-card") === null);
+
+  // ------------------------------------------------ 8. 贴边定位
+  a.setRect({ left: 1200, top: 300, right: 1320, bottom: 318, width: 120, height: 18 });   // 贴右
+  w.doc.dispatch("mouseover", { target: a, relatedTarget: null });
+  w.advance(450);
+  await tick(); await tick();
+  card = w.doc.getElementById("pv-card");
+  check("链接贴右边时卡片左移、不溢出",
+        !!card && parseFloat(card.style.left) + 340 <= 1280 && parseFloat(card.style.left) >= 8,
+        `left=${card && card.style.left}`);
+  w.doc.dispatch("mouseout", { target: a, relatedTarget: null });
+  w.advance(300);
+
+  a.setRect({ left: 100, top: 780, right: 220, bottom: 798, width: 120, height: 18 });     // 贴底
+  w.doc.dispatch("mouseover", { target: a, relatedTarget: null });
+  w.advance(450);
+  await tick(); await tick();
+  card = w.doc.getElementById("pv-card");
+  check("链接贴视口底部时卡片显示在链接上方",
+        !!card && parseFloat(card.style.top) + 120 <= 800 && parseFloat(card.style.top) < 780,
+        `top=${card && card.style.top}`);
+  check("索引只取了一次", w.fetched.length === 1, `fetch ${w.fetched.length} 次`);
+
+  // ------------------------------------------------ 9. 触屏设备整套不启用
   const touch = makeWorld({ hover: false });
   const ta = link(touch.doc, "%E4%B8%8A%E9%B9%88.html");
   touch.doc.dispatch("mouseover", { target: ta, relatedTarget: null });
