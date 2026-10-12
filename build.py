@@ -25,7 +25,8 @@ import re
 import shutil
 import sys
 import time
-from urllib.parse import quote
+from html.parser import HTMLParser
+from urllib.parse import quote, unquote
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -175,6 +176,170 @@ def _infobox_text(m):
     inner = re.sub(r"</td>", "", inner)
     inner = re.sub(r"</(table|div)>", " ", inner)
     return inner
+
+
+# ------------------------------------------------------ 悬停预览（previews.json）
+# 悬停预览卡片显示的是「正文第一段」，不是 plain_excerpt 那种把整页 textContent
+# 压平的字符串——后者开头永远是目录和 [ 编辑 ]，卡片里很难看。
+# 所以这里按块级结构挑第一个真正的 <p>，信息框 / 目录 / callout / 列表一律跳过。
+
+_PREVIEW_VOID = {"br", "img", "hr", "input", "meta", "link", "source", "col",
+                 "area", "base", "embed", "track", "wbr", "param"}
+_PREVIEW_SKIP_TAGS = {"aside", "details", "table", "ol", "ul", "dl", "h1", "h2", "h3",
+                      "h4", "h5", "h6", "script", "style", "figure", "figcaption",
+                      "blockquote", "pre", "nav"}
+_PREVIEW_SKIP_CLASSES = {"infobox", "toc", "callout", "navbox", "list-grid", "mbox",
+                         "backlinks", "catlinks", "spoiler-banner", "spoiler-fold",
+                         "stub-notice", "search-results"}
+# 换行处压空格时，这些字符之间不能留空格（中文正文里的 <br> 是排版换行，不是词间空格）
+_CJK_RUN = (r"\u3000-\u303f\u4e00-\u9fff\uff00-\uffef"
+            r"\u2018\u2019\u201c\u201d\u2026\u2014")
+
+
+class _FirstParagraph(HTMLParser):
+    """从一段 HTML 里挑出第一个「像样的段落」的纯文本。"""
+
+    MIN_CHARS = 12          # 短于这个长度不算段落（「待补完」这类占位行会被跳过）
+
+    def __init__(self):
+        HTMLParser.__init__(self, convert_charrefs=True)
+        self.stack = []             # [(tag, 是否在跳过的块里)]
+        self.skip = 0               # 当前嵌套在多少个「要跳过」的元素里
+        self.in_p = False
+        self.buf = []
+        self.result = ""
+
+    @staticmethod
+    def _classes(attrs):
+        for key, value in attrs:
+            if key == "class":
+                return set((value or "").split())
+        return set()
+
+    def handle_starttag(self, tag, attrs):
+        if tag in _PREVIEW_VOID:
+            if tag == "br" and self.skip == 0 and self.in_p:
+                self.buf.append("\x01")     # <br> 是作者写下的换行，保留
+            return
+        skipping = (self.skip > 0 or tag in _PREVIEW_SKIP_TAGS
+                    or bool(self._classes(attrs) & _PREVIEW_SKIP_CLASSES))
+        self.stack.append((tag, skipping))
+        if skipping:
+            self.skip += 1
+        elif tag == "p" and not self.in_p:
+            self.in_p = True
+            self.buf = []
+
+    def handle_startendtag(self, tag, attrs):
+        if tag in _PREVIEW_VOID:
+            self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag):
+        if tag in _PREVIEW_VOID:
+            return
+        while self.stack:
+            name, skipping = self.stack.pop()
+            if skipping:
+                self.skip -= 1
+            if name == tag:
+                break
+        if tag == "p" and self.in_p and self.skip == 0:
+            text = "".join(self.buf)
+            self.in_p = False
+            self.buf = []
+            if not self.result and len(re.sub(r"\s+", "", text)) >= self.MIN_CHARS:
+                self.result = text
+
+    def handle_data(self, data):
+        if self.skip == 0 and self.in_p:
+            self.buf.append(data)
+
+
+def _preview_clean(text):
+    """压掉多余空白，把 <br> 留下的记号还原成空格。"""
+    text = text.replace("[ 编辑 ]", " ").replace("[编辑]", " ")
+    text = re.sub(r"\s+", " ", text)
+    # 源码里的换行在正文里变成空格；中文之间不该有这种空格，去掉
+    text = re.sub(r"(?<=[%s]) (?=[%s])" % (_CJK_RUN, _CJK_RUN), "", text)
+    text = re.sub(r" (?=[，。、；：！？）」』】》])", "", text)
+    text = re.sub(r"(?<=[（「『【《]) ", "", text)
+    text = text.replace("\x01", " ")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _preview_clip(text, limit):
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    best = max(cut.rfind("。"), cut.rfind("！"), cut.rfind("？"))
+    if best >= limit // 2:               # 句号离得太远就硬截，别只剩半句
+        return cut[:best + 1]
+    return cut.rstrip() + "…"
+
+
+def preview_excerpt(body_html, limit=160):
+    """悬停卡片用的干净摘要：正文里第一个像样的段落，截到约 limit 字。
+
+    正文里没有可用的段落（内容全在信息框 / 提示框里）时返回空串——
+    宁可卡片少一段话，也不把信息框字段当摘要端出去。
+    """
+    if not body_html:
+        return ""
+    picker = _FirstParagraph()
+    try:
+        picker.feed(body_html)
+        picker.close()
+    except Exception:                                    # noqa: BLE001
+        return ""
+    if not picker.result:
+        return ""
+    return _preview_clip(_preview_clean(picker.result), limit)
+
+
+_INFOBOX_RE = re.compile(r'<aside\b[^>]*class="[^"]*\binfobox\b[^"]*"[^>]*>(.*?)</aside>', re.S)
+_IMG_SRC_RE = re.compile(r"<img\b[^>]*\bsrc=\"([^\"]+)\"", re.I)
+
+
+def preview_image(out_path, body_html):
+    """信息框里的第一张图，换算成「相对站点根」的路径；没有就返回空串。
+
+    只认信息框里的图：页面外壳的 logo、小按钮、状态横幅图标都不是内容配图。
+    """
+    if not body_html:
+        return ""
+    box = _INFOBOX_RE.search(body_html)
+    if not box:
+        return ""
+    img = _IMG_SRC_RE.search(box.group(1))
+    if not img:
+        return ""
+    src = _html.unescape(img.group(1)).strip()
+    if not src or src.startswith(("http://", "https://", "//", "data:")):
+        return ""
+    rel = posixpath.normpath(posixpath.join(posixpath.dirname(out_path or ""), unquote(src)))
+    if rel == ".." or rel.startswith("../"):             # 跑到 docs/ 外面去了
+        return ""
+    return rel
+
+
+def preview_index_items(all_pages, gate=None):
+    """previews.json 的条目。加密作品的一条都不进——卡片会把明文送到页面上。"""
+    items = []
+    for p in all_pages:
+        if gate is not None and gate.covers(p.work):
+            continue
+        item = {"t": p.title, "u": p.url, "x": preview_excerpt(p.body_html)}
+        image = preview_image(p.out_path, p.body_html)
+        if image:
+            item["i"] = image
+        # 摘要为空多半是因为整页正文都在剧透折叠里（例如标题含「第二季」的小节）。
+        # 规矩是「预览只显示目标页默认就能看到的内容」，所以折叠内容不拿来当摘要；
+        # 但卡片只挂个标题太空，这里标记一下，让前端显示一句「正文默认折叠」。
+        if not item["x"] and getattr(p, "has_spoiler", False):
+            item["f"] = 1
+        items.append(item)
+    items.sort(key=lambda i: i["t"])
+    return items
 
 
 # ------------------------------------------------------------------ 数据模型
@@ -650,14 +815,8 @@ def build(root, cfg, quiet=False):
     out_dir = os.path.join(root, cfg["output_dir"])
     # 图标目录要在渲染正文之前就位（空页面的占位提示里会用到）
     P.ICON_DIR = os.path.join(root, cfg["assets_dir"], "icons")
-    # 给 css/js 带上内容指纹：否则改了样式，用户浏览器还拿着旧的缓存，
-    # 就会出现「HTML 是新的、样式是旧的」这种半新半旧的页面（踩过一次）。
     gate_js_path = os.path.join(root, cfg["assets_dir"], "gate.js")
     gate_js = read_text(gate_js_path) if os.path.isfile(gate_js_path) else ""
-    cfg["_asset_ver"] = hashlib.sha1(
-        (P.theme_css(cfg.get("theme", {})) + P.THEME_JS + P.SEARCH_JS + P.RANDOM_JS + gate_js +
-         json.dumps(cfg.get("buttons", []), ensure_ascii=False)).encode("utf-8")
-    ).hexdigest()[:8]
     works, pages, home = load_pages(root, cfg, verbose=not quiet)
     # 未公开作品的密码门。配了 gate.works 却没给 WIKI_GATE_PASSWORD 时，
     # 或者作品目录名写错时，gate_from_config 会直接 sys.exit——绝不明文照发。
@@ -698,6 +857,19 @@ def build(root, cfg, quiet=False):
         render_body(p, bodies[p.rel], resolver, cfg)
         warn += len(p.warnings)
     render_body(home, home_body, resolver, cfg)
+
+    # 悬停预览索引这时候算：正文都渲染完了，才有干净的段落和配图可挑。
+    # 它的指纹也要进 _asset_ver——previews.json 是独立文件，内容变了必须换个
+    # 查询串，否则浏览器拿着旧的卡片数据；theme.js 里拼的就是这个指纹。
+    preview_items = preview_index_items(all_pages, gate=gate)
+    preview_json = json.dumps(preview_items, ensure_ascii=False)
+    # 给 css/js 带上内容指纹：否则改了样式，用户浏览器还拿着旧的缓存，
+    # 就会出现「HTML 是新的、样式是旧的」这种半新半旧的页面（踩过一次）。
+    cfg["_asset_ver"] = hashlib.sha1(
+        (P.theme_css(cfg.get("theme", {})) + P.THEME_JS + P.SEARCH_JS + P.RANDOM_JS + gate_js +
+         preview_json +
+         json.dumps(cfg.get("buttons", []), ensure_ascii=False)).encode("utf-8")
+    ).hexdigest()[:8]
 
     # 反向链接
     backlinks = {p.rel: [] for p in all_pages}
@@ -879,6 +1051,7 @@ def build(root, cfg, quiet=False):
                     out_dir, tag_map, gate)
     write_assets(root, cfg, out_dir)
     write_search_index(cfg, works, all_pages, out_dir, gate=gate)
+    write_preview_index(cfg, works, all_pages, out_dir, gate=gate, items=preview_items)
     report(root, cfg, works, pages, all_pages, by_name, images, backlinks, warn, quiet)
     return len(all_pages)
 
@@ -1153,7 +1326,10 @@ def write_assets(root, cfg, out_dir):
                 os.makedirs(os.path.dirname(target), exist_ok=True)
                 shutil.copy2(os.path.join(dirpath, name), target)
     write_text(os.path.join(dst, "theme.css"), P.theme_css(cfg.get("theme", {})))
-    write_text(os.path.join(dst, "theme.js"), P.THEME_JS)
+    # theme.js 里占着 previews.json 的缓存指纹：它是独立文件，页面上的 ?v= 到不了它，
+    # 只能让 theme.js 自己带上。指纹变了 theme.js 也会变，两者始终对得上。
+    write_text(os.path.join(dst, "theme.js"),
+               P.THEME_JS.replace(P.PREVIEW_VER_TOKEN, cfg.get("_asset_ver", "")))
     write_text(os.path.join(dst, "search.js"), P.SEARCH_JS)
     write_text(os.path.join(dst, "random.js"), P.RANDOM_JS)
     write_text(os.path.join(dst, "favicon.svg"), P.FAVICON)
@@ -1180,6 +1356,19 @@ def write_search_index(cfg, works, all_pages, out_dir, gate=None):
         })
     items.sort(key=lambda i: i["t"])
     write_text(os.path.join(out_dir, "search.json"), json.dumps(items, ensure_ascii=False))
+
+
+def write_preview_index(cfg, works, all_pages, out_dir, gate=None, items=None):
+    """悬停预览索引（docs/previews.json）。
+
+    和 search.json 一样，加密作品的页面一条都不收：卡片会把明文摘要直接送到
+    页面上，收进去就等于绕过密码门。正文里的链接指向加密作品时查不到条目，
+    也就自然不会弹卡片。
+    """
+    if items is None:
+        items = preview_index_items(all_pages, gate=gate)
+    write_text(os.path.join(out_dir, "previews.json"), json.dumps(items, ensure_ascii=False))
+    return items
 
 
 def report(root, cfg, works, pages, all_pages, by_name, images, backlinks, warn, quiet):

@@ -290,6 +290,25 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
 .site-footer .fnav{margin-bottom:6px}
 .site-footer .fnav a{margin:0 7px}
 
+/* ---------------------------------------------------- 词条悬停预览（Page Previews） */
+/* position:fixed + 视口坐标：夹紧到视口时不用管页面滚到哪儿了（滚动本来就会收起卡片） */
+.pv-card{position:fixed; z-index:200; width:340px; max-width:calc(100vw - 16px); background:#fff;
+  border:1px solid var(--border); border-radius:3px; box-shadow:0 4px 14px rgba(0,0,0,.28);
+  font-size:12.5px; line-height:1.65; color:var(--text); overflow:hidden; text-align:left}
+.pv-card .pv-head{padding:5px 9px; font-size:13px; font-weight:700; color:#22456e;
+  background:linear-gradient(180deg,var(--box-head-a),var(--box-head-b));
+  border-bottom:1px solid var(--border); font-family:Georgia,"Songti SC","STSong",serif}
+.pv-card .pv-head a{color:#22456e}
+.pv-card .pv-body{display:flex; gap:9px; align-items:flex-start; padding:9px}
+.pv-card .pv-thumb{flex:0 0 60px; width:60px; height:60px; object-fit:cover; background:#fff;
+  border:1px solid var(--border-soft); padding:1px}
+.pv-card .pv-text{margin:0; flex:1 1 auto; min-width:0; color:#333;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+.pv-card .pv-folded{color:#8a6d1f; font-size:12px; -webkit-line-clamp:2}
+.pv-card .pv-body:only-child .pv-text{padding:0}
+.pv-card .pv-foot{padding:3px 9px; text-align:right; font-size:11.5px; color:var(--muted);
+  background:#f7fafd; border-top:1px solid var(--border-soft)}
+
 @media (max-width:900px){
   .layout{flex-direction:column}
   .sidebar{width:100%; flex:1 1 auto}
@@ -300,7 +319,7 @@ h2:hover .anchor,h3:hover .anchor{opacity:1}
   .site-tagline{display:none}
 }
 @media print{
-  .top-bar,.nav-bar,.sidebar,.page-tabs,.site-footer,.search-form{display:none}
+  .top-bar,.nav-bar,.sidebar,.page-tabs,.site-footer,.search-form,.pv-card{display:none}
   .layout{display:block}
   .article-wrap{border:0; box-shadow:none}
   .spoiler-fold{border:0}

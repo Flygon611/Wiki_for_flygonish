@@ -88,4 +88,198 @@
       t.textContent = off ? '[展开]' : '[折叠]';
     });
   });
+
+  // ---------- 词条悬停预览（Page Previews）----------
+  // 鼠标停在蓝色词条链接上，浮出目标条目的标题、摘要和缩略图。
+  // 数据来自构建期生成的 previews.json（加密作品不在里面，见 build.py）。
+  (function(){
+    // 触屏 / 只有粗指针的设备上没有「悬停」这回事，整套不启用。
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (typeof fetch !== 'function') return;
+
+    var DELAY = 400;         // 悬停多久才弹（毫秒）
+    var GRACE = 200;         // 离开链接/卡片后留一点时间，让人能把鼠标移进卡片
+    var GAP = 6, EDGE = 8;
+    var PV_VER = '02919f00';
+
+    var input = document.getElementById('wiki-search-input');
+    var indexUrl = input && input.getAttribute('data-index');
+    if (!indexUrl) return;                       // 推不出去站点根的前缀，宁可不弹
+    var basePrefix = indexUrl.replace(/search\.json.*$/, '');
+    var indexFile = basePrefix + 'previews.json' +
+                    (PV_VER ? '?v=' + encodeURIComponent(PV_VER) : '');
+
+    // 站点根在 location 里的位置（GitHub Pages 是 /Wiki_for_flygonish/，本地是 /）。
+    // 拿它才能把链接的 href（相对当前页面）还原成「相对站点根」，和 u 对得上。
+    var rootPath = '';
+    try {
+      rootPath = new URL(basePrefix + 'previews.json', location.href).pathname.replace(/[^/]*$/, '');
+    } catch (e) { rootPath = ''; }
+    var selfPath = '';
+    try {
+      if (rootPath && location.pathname.indexOf(rootPath) === 0) {
+        selfPath = safeDecode(location.pathname.slice(rootPath.length));
+      }
+    } catch (e) { selfPath = ''; }
+
+    var items = null, loading = null, lookup = null;
+    var card = null, cardLink = null;
+    var hoveredLink = null, showTimer = null, hideTimer = null;
+
+    function safeDecode(s){
+      try { return decodeURIComponent(s); } catch (e) { return String(s); }
+    }
+    function normpath(p){
+      var out = [];
+      String(p).split('/').forEach(function(seg){
+        if (!seg || seg === '.') return;
+        if (seg === '..') { out.pop(); return; }
+        out.push(seg);
+      });
+      return out.join('/');
+    }
+    function esc(s){
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function encodePath(p){
+      return String(p).split('/').map(function(seg){ return encodeURIComponent(seg); }).join('/');
+    }
+    // href（已去掉 # 与 ?query）→ 相对站点根的路径；外部链接 / 站外路径返回 ''
+    function targetPath(href){
+      var h = String(href || '').split('#')[0].split('?')[0];
+      if (!h || h.indexOf('//') === 0 || /^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(h)) return '';
+      var path = '';
+      if (rootPath && typeof URL === 'function') {
+        try { path = new URL(h, location.href).pathname; } catch (e) { return ''; }
+        if (path.indexOf(rootPath) !== 0) return '';
+        path = path.slice(rootPath.length);
+      } else {
+        // 老浏览器没有 URL：退回字符串拼接。href 里以 ../ 开头的会算错，
+        // 这种链接宁可不弹卡片，也不弹错条目。
+        if (h.charAt(0) === '/' || h.indexOf('../') === 0) return '';
+        path = normpath(basePrefix + h);
+      }
+      return safeDecode(path);
+    }
+
+    function load(){
+      if (items) return Promise.resolve(items);
+      if (!loading) {
+        loading = fetch(indexFile).then(function(r){ return r.json(); }).then(function(json){
+          items = json || [];
+          lookup = {};
+          items.forEach(function(it){
+            if (it && it.u) lookup[safeDecode(it.u)] = it;
+          });
+          return items;
+        }).catch(function(){
+          // 双击打开 HTML、或索引读取失败：安静地不弹卡片就是了
+          items = []; lookup = {}; return items;
+        });
+      }
+      return loading;
+    }
+
+    function hide(){
+      clearTimeout(showTimer); clearTimeout(hideTimer);
+      showTimer = hideTimer = null;
+      if (card && card.parentNode) card.parentNode.removeChild(card);
+      card = null; cardLink = null;
+    }
+    function scheduleHide(){
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(hide, GRACE);
+    }
+    function place(link){
+      if (!card) return;
+      var r = link.getBoundingClientRect();
+      var vw = window.innerWidth || (document.documentElement && document.documentElement.clientWidth) || 0;
+      var vh = window.innerHeight || (document.documentElement && document.documentElement.clientHeight) || 0;
+      var cw = card.offsetWidth || 340;
+      var ch = card.offsetHeight || 120;
+      var left = r.left;
+      var top = r.bottom + GAP;
+      // 链接贴着视口底部时翻到上方
+      if (top + ch + EDGE > vh && r.top - GAP - ch >= EDGE) top = r.top - GAP - ch;
+      if (left + cw + EDGE > vw) left = vw - cw - EDGE;    // 右边放不下就左移
+      if (left < EDGE) left = EDGE;
+      if (top + ch + EDGE > vh) top = vh - ch - EDGE;      // 上下都夹进视口
+      if (top < EDGE) top = EDGE;
+      card.style.left = Math.round(left) + 'px';
+      card.style.top = Math.round(top) + 'px';
+    }
+    function show(link, item){
+      if (card && cardLink === link) return;      // 同一个链接不重复建 DOM
+      hide();
+      cardLink = link;
+      card = document.createElement('div');
+      card.className = 'pv-card';
+      card.id = 'pv-card';
+      var href = esc(basePrefix + item.u);
+      var html = '<div class="pv-head"><a href="' + href + '">' + esc(item.t) + '</a></div>';
+      var body = '';
+      if (item.i) {
+        body += '<img class="pv-thumb" src="' + esc(basePrefix + encodePath(item.i)) + '" alt="">';
+      }
+      if (item.x) {
+        body += '<p class="pv-text">' + esc(item.x) + '</p>';
+      } else if (item.f) {
+        // 正文全在剧透折叠里：不拿折叠内容当摘要，但别让卡片空着
+        body += '<p class="pv-text pv-folded">\uD83D\uDD12 本页正文默认折叠，点开查看</p>';
+      }
+      if (body) html += '<div class="pv-body">' + body + '</div>';
+      html += '<div class="pv-foot"><a href="' + href + '">查看条目 \u2192</a></div>';
+      card.innerHTML = html;
+      card.addEventListener('mouseenter', function(){ clearTimeout(hideTimer); hideTimer = null; });
+      card.addEventListener('mouseleave', scheduleHide);
+      document.body.appendChild(card);
+      place(link);
+    }
+    function open(link){
+      showTimer = null;
+      var key = targetPath(link.getAttribute('href'));
+      // 查不到条目（含加密作品、未完成页面）就不弹——不做任何兜底猜测
+      if (!key || key === selfPath) return;
+      load().then(function(){
+        if (hoveredLink !== link) return;       // 等数据的时候鼠标已经移开了
+        if (!lookup || !lookup[key]) return;
+        show(link, lookup[key]);
+      });
+    }
+
+    document.addEventListener('mouseover', function(e){
+      var t = e.target;
+      var link = t && t.closest ? t.closest('a.wikilink') : null;
+      if (link) {
+        clearTimeout(hideTimer); hideTimer = null;
+        if (card && cardLink !== link) hide();          // 同一时间只留一张卡片
+        if (card) return;
+        hoveredLink = link;
+        clearTimeout(showTimer);
+        showTimer = setTimeout(function(){ open(link); }, DELAY);
+        return;
+      }
+      if (card && (t === card || card.contains(t))) { clearTimeout(hideTimer); hideTimer = null; }
+    });
+    document.addEventListener('mouseout', function(e){
+      var t = e.target;
+      var link = t && t.closest ? t.closest('a.wikilink') : null;
+      if (!link) return;
+      if (hoveredLink === link) hoveredLink = null;
+      var to = e.relatedTarget;
+      if (to && (link.contains(to) || (card && card.contains(to)))) return;   // 移进卡片，别收
+      clearTimeout(showTimer); showTimer = null;
+      scheduleHide();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' || e.keyCode === 27) hide();
+    });
+    document.addEventListener('click', function(e){
+      if (card && !card.contains(e.target)) hide();     // 点了别处
+    });
+    window.addEventListener('scroll', hide, true);      // 页面一动，卡片就不跟了
+    window.addEventListener('resize', hide);
+  })();
 })();
